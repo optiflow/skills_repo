@@ -1,0 +1,3 @@
+display_name: "Spec-Driven Dev"
+short_description: "Plan AI-assisted software work from specs before code"
+default_prompt: "Use spec-driven-dev to turn this feature idea into a constitution, feature spec, and validation plan before implementation."

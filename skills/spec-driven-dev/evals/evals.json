@@ -1,0 +1,73 @@
+{
+  "skill_name": "spec-driven-dev",
+  "evals": [
+    {
+      "id": "greenfield-constitution-first",
+      "prompt": "I want to build a small web app that helps runners balance strength training and half-marathon prep. Use spec-driven development before coding.",
+      "expected_output": "A response that starts with a constitution and first feature spec plan instead of jumping into implementation.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output includes project-level mission, tech-stack, and roadmap artifacts or sections."
+        },
+        {
+          "text": "Output includes a first feature spec with plan, requirements, and validation."
+        },
+        {
+          "text": "Output does not start coding before the spec is reviewed or accepted."
+        }
+      ]
+    },
+    {
+      "id": "brownfield-adoption",
+      "prompt": "This existing repo has no specs. Adopt spec-driven development, then plan a refactor of the auth flow without changing behavior.",
+      "expected_output": "A response that inspects or requests repo evidence, reverse-engineers a constitution, and creates a behavior-preserving feature spec before refactor work.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output says to inspect existing docs, tests, configs, and relevant code before drafting the constitution."
+        },
+        {
+          "text": "Output separates confirmed repo facts from assumptions or questions."
+        },
+        {
+          "text": "Output includes validation checks that prove auth behavior did not change."
+        }
+      ]
+    },
+    {
+      "id": "risk-first-validation",
+      "prompt": "Add billing webhooks with AI assistance. I want the coding agent to move fast, but this cannot double-charge users.",
+      "expected_output": "A spec-driven plan that treats billing as risky, defines requirements and validation gates, and only then allows implementation.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output calls out billing risk and requires explicit acceptance criteria before implementation."
+        },
+        {
+          "text": "Output includes validation for idempotency or duplicate webhook delivery."
+        },
+        {
+          "text": "Output recommends implementing in reviewable task groups rather than one broad coding pass."
+        }
+      ]
+    },
+    {
+      "id": "tiny-script-near-miss",
+      "prompt": "Write a one-off shell command to count lines in all markdown files. No need for a full project process.",
+      "expected_output": "A lightweight answer that avoids full SDD artifacts while keeping a simple correctness check.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output does not force mission, tech-stack, roadmap, and feature-spec artifacts."
+        },
+        {
+          "text": "Output gives a short command or plan suitable for a tiny one-off task."
+        },
+        {
+          "text": "Output includes a simple way to verify the command result."
+        }
+      ]
+    }
+  ]
+}
