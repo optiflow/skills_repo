@@ -1,0 +1,3 @@
+display_name: Back Brief
+short_description: Confirm task intent before material execution
+default_prompt: Back-brief this task before executing so I can confirm or correct your understanding.

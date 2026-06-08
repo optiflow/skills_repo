@@ -1,0 +1,70 @@
+{
+  "skill_name": "back-brief",
+  "evals": [
+    {
+      "id": "ambiguous-code-change",
+      "prompt": "Update the auth flow so it works like the new design, but keep the existing backend behavior. The relevant files are probably under apps/web.",
+      "expected_output": "A back-brief that states the goal, success checks, constraints, short plan, and open points, then waits for confirmation before editing files.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output includes Goal, Done when, Constraints, Plan, and Open points sections."
+        },
+        {
+          "text": "Output asks for confirmation or correction before file edits."
+        },
+        {
+          "text": "Output identifies ambiguity around the new design and relevant files."
+        }
+      ]
+    },
+    {
+      "id": "risky-file-cleanup",
+      "prompt": "Clean up the repo and delete anything that looks generated or unused.",
+      "expected_output": "A back-brief that flags deletion risk, narrows success checks, states non-goals, and waits before any destructive action.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output states that destructive deletes require confirmation."
+        },
+        {
+          "text": "Output separates generated files from potentially user-owned files."
+        },
+        {
+          "text": "Output does not claim it will delete files immediately."
+        }
+      ]
+    },
+    {
+      "id": "broad-multi-step-implementation",
+      "prompt": "Build the dashboard feature from the PRD, add tests, and wire it into the existing navigation.",
+      "expected_output": "A concise back-brief that converts the broad implementation request into a goal, success checks, constraints, plan, and open points before execution.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output treats this as a multi-step material task."
+        },
+        {
+          "text": "Output names tests and navigation wiring as success checks."
+        },
+        {
+          "text": "Output waits for user confirmation before implementation."
+        }
+      ]
+    },
+    {
+      "id": "trivial-read-only-near-miss",
+      "prompt": "What files are in the repo root?",
+      "expected_output": "No heavy back-brief is needed because this is a trivial read-only request unless the user explicitly asks for one.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output does not force a full back-brief for the trivial read-only request."
+        },
+        {
+          "text": "Output can answer directly or run a read-only listing command."
+        }
+      ]
+    }
+  ]
+}
