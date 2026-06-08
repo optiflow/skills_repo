@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trigger Eval Review</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;line-height:1.45}
+textarea{width:100%;min-height:5rem} .item{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:1rem 0}
+.badge{font-size:.8rem;padding:.2rem .45rem;border-radius:999px;background:#eee} button{padding:.6rem 1rem;margin:.5rem .5rem .5rem 0}
+pre{white-space:pre-wrap;background:#f6f6f6;padding:1rem;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>Trigger Eval Review: __SKILL_NAME_PLACEHOLDER__</h1>
+<p><strong>Current description:</strong> __SKILL_DESCRIPTION_PLACEHOLDER__</p>
+<div id="items"></div>
+<button onclick="addItem()">Add item</button>
+<button onclick="exportJson()">Export Eval Set</button>
+<pre id="preview"></pre>
+<script>
+let data = __EVAL_DATA_PLACEHOLDER__;
+function render(){
+  const root=document.getElementById('items'); root.innerHTML='';
+  data.forEach((item,i)=>{
+    const div=document.createElement('div'); div.className='item';
+    div.innerHTML=`<div><span class="badge">${item.id||('item-'+i)}</span></div>
+      <label>Query</label><textarea oninput="data[${i}].query=this.value; updatePreview()">${item.query||''}</textarea>
+      <label><input type="checkbox" ${item.should_trigger?'checked':''} onchange="data[${i}].should_trigger=this.checked; updatePreview()"> should trigger</label>
+      <button onclick="data.splice(${i},1); render(); updatePreview()">Remove</button>`;
+    root.appendChild(div);
+  });
+  updatePreview();
+}
+function addItem(){data.push({id:'new-item',query:'',should_trigger:true}); render();}
+function updatePreview(){document.getElementById('preview').textContent=JSON.stringify(data,null,2);}
+function exportJson(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='eval_set.json'; a.click();
+}
+render();
+</script>
+</body>
+</html>

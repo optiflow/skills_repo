@@ -1,0 +1,27 @@
+{
+  "skill_name": "create-skill",
+  "evals": [
+    {
+      "id": "create-narrow-file-transform-skill",
+      "prompt": "Create a skill for converting messy clinic CSV exports into a cleaned Excel workbook with one summary sheet and one validation sheet.",
+      "expected_output": "A lean skill with scripts for deterministic CSV/XLSX handling, realistic evals, validation guidance, and packaging steps.",
+      "files": [],
+      "assertions": [
+        {"text": "The draft separates deterministic transformation code into scripts rather than prose-only instructions."},
+        {"text": "The draft includes at least two realistic eval prompts or an evals.json scaffold."},
+        {"text": "The SKILL.md frontmatter description includes trigger contexts, not only a title."}
+      ]
+    },
+    {
+      "id": "improve-existing-skill",
+      "prompt": "This existing PDF skill keeps over-triggering for generic article summaries. Improve it without changing the name.",
+      "expected_output": "An update plan that snapshots the original skill, preserves the name, adjusts the trigger description, and tests near-miss negatives.",
+      "files": [],
+      "assertions": [
+        {"text": "The response preserves the original name unless the user requests a rename."},
+        {"text": "The response uses the old version as a baseline."},
+        {"text": "The response proposes should-not-trigger near-miss tests."}
+      ]
+    }
+  ]
+}
