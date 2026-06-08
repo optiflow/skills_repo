@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Create, update, validate, evaluate, optimize, and package AI agent skills. Use whenever the user asks to create or improve a skill, edit SKILL.md, capture a repeated workflow into a reusable skill, design scripts/references/assets, write or run skill evals or baselines, review skill outputs, tune trigger descriptions, make skills searchable or installable, or prepare a portable .skill package.
+description: Create, update, validate, evaluate, optimize, and package AI agent skills. Use whenever the user asks to create or improve a skill, capture a repeated workflow into a reusable skill, design scripts/references/assets, run skill evals or baselines, review skill outputs, tune the skill trigger description, or prepare a portable .skill package.
 ---
 
 # Create Skill
