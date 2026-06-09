@@ -1,0 +1,32 @@
+{
+  "name": "skills-repo",
+  "version": "1.0.0",
+  "description": "Agent skills for task alignment, spec-driven development, and skill authoring",
+  "license": "MIT",
+  "keywords": [
+    "agent-skill",
+    "agent-skills",
+    "skills",
+    "skills.sh",
+    "back-brief",
+    "backbrief",
+    "requirements",
+    "task-alignment",
+    "spec-driven-development",
+    "skill-authoring",
+    "claude-code",
+    "codex",
+    "cursor",
+    "opencode",
+    "gemini-cli",
+    "github-copilot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/optiflow/skills_repo.git"
+  },
+  "homepage": "https://github.com/optiflow/skills_repo#readme",
+  "bugs": {
+    "url": "https://github.com/optiflow/skills_repo/issues"
+  }
+}
