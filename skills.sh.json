@@ -3,6 +3,13 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "Skill Authoring",
+      "description": "Skills for creating and maintaining reusable agent skills.",
+      "skills": [
+        "create-skill"
+      ]
+    },
+    {
       "title": "Task Alignment",
       "description": "Skills that help agents confirm intent before material execution.",
       "skills": [
@@ -14,13 +21,6 @@
       "description": "Skills for specs, requirements, and validation before implementation.",
       "skills": [
         "spec-driven-dev"
-      ]
-    },
-    {
-      "title": "Skill Authoring",
-      "description": "Skills for creating and maintaining reusable agent skills.",
-      "skills": [
-        "create-skill"
       ]
     }
   ]

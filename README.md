@@ -2,9 +2,21 @@
 
 [![skills.sh](https://skills.sh/b/optiflow/skills_repo)](https://skills.sh/optiflow/skills_repo)
 
-Reusable agent skills for task alignment, spec-driven development, and skill authoring.
+Reusable agent skills for skill authoring, task alignment, and spec-driven development.
 
 ## Quick Install
+
+Install `create-skill` with the skills CLI:
+
+```bash
+npx skills add optiflow/skills_repo --skill create-skill
+```
+
+If the shorthand has not appeared on skills.sh yet, install from the direct GitHub path:
+
+```bash
+npx skills add https://github.com/optiflow/skills_repo/tree/main/skills/create-skill
+```
 
 Install `back-brief` with the skills CLI:
 
@@ -26,6 +38,10 @@ npx skills add optiflow/skills_repo --list
 
 ## Skills
 
+### create-skill
+
+Create, update, validate, evaluate, optimize, and package AI agent skills.
+
 ### back-brief
 
 Confirm task intent before material execution. Use this when a task is ambiguous, risky, multi-step, file-changing, high-cost, or when the user asks the agent to restate the requirement before acting.
@@ -33,10 +49,6 @@ Confirm task intent before material execution. Use this when a task is ambiguous
 ### spec-driven-dev
 
 Guide spec-driven development for AI-assisted software work. Use this for feature specs, project constitutions, validation scorecards, and structured implementation plans.
-
-### create-skill
-
-Create, update, validate, evaluate, optimize, and package AI agent skills.
 
 ## Directory Listing
 
