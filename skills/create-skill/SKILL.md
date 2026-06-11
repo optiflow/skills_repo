@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Create, update, validate, evaluate, optimize, and package AI agent skills. Use whenever the user asks to create or improve a skill, capture a repeated workflow into a reusable skill, design scripts/references/assets, run skill evals or baselines, review skill outputs, tune the skill trigger description, or prepare a portable .skill package.
+description: Create new AI agent skills from explicit user requests or confirmed repeated workflows. Use when the user asks to create, design, scaffold, validate, or package a new skill; asks whether a recurring workflow should become a skill; or approves turning a repeated workflow into a skill. If repeated work is only observed, suggest a brief skill proposal and ask before creating files. Do not use for maintenance of already-created skills; use update-skill instead.
 ---
 
 # Create Skill
@@ -48,6 +48,12 @@ skill-name/
 Keep the root clean. Avoid extra `README.md`, changelog, install guide, and similar files unless the user explicitly needs them as part of the skill output.
 
 ## Workflow
+
+Start with the right level of permission:
+
+- If the user explicitly asks for a new skill, proceed with this creation workflow.
+- If repeated work is only inferred, propose a one-paragraph skill brief first: job, trigger, output, likely resources, and why it is worth capturing.
+- Do not scaffold files until the user confirms.
 
 ### 1. Capture intent
 
@@ -131,7 +137,7 @@ Add assertions only when they can be checked objectively. For subjective work, u
 When the environment supports independent runs, test each prompt twice:
 
 - **With skill:** use the candidate skill.
-- **Baseline:** use no skill for a new skill, or the old skill snapshot for an update.
+- **Baseline:** use no skill.
 
 Save outputs under a sibling workspace:
 
@@ -223,9 +229,3 @@ A skill is ready when all applicable gates pass:
 - **Evidence gate:** Realistic tests show better quality, speed, cost, consistency, or safety than baseline.
 - **Review gate:** Human feedback has been addressed or clearly marked as out of scope.
 - **Package gate:** The package contains no secrets, caches, workspaces, or surprise files.
-
-## Updating an existing skill
-
-Preserve the original skill name unless the user asks for a rename. Snapshot the original before editing. Use the snapshot as the baseline, so the user can see whether the new version is better.
-
-If the installed skill is read-only, copy it to a writable directory, edit the copy, validate it, then package from the copy.

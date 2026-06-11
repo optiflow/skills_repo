@@ -13,14 +13,14 @@
       ]
     },
     {
-      "id": "improve-existing-skill",
-      "prompt": "This existing PDF skill keeps over-triggering for generic article summaries. Improve it without changing the name.",
-      "expected_output": "An update plan that snapshots the original skill, preserves the name, adjusts the trigger description, and tests near-miss negatives.",
+      "id": "suggest-skill-for-repeated-workflow",
+      "prompt": "We have done the same vendor onboarding review three times: summarize intake notes, check missing risk fields, draft follow-up questions, and produce a short decision memo. I did not ask you to create a skill yet, but this keeps coming up.",
+      "expected_output": "A brief skill proposal, not file changes, with the job, trigger, output, likely resources, and why the workflow is worth capturing, plus a request for confirmation before scaffolding.",
       "files": [],
       "assertions": [
-        {"text": "The response preserves the original name unless the user requests a rename."},
-        {"text": "The response uses the old version as a baseline."},
-        {"text": "The response proposes should-not-trigger near-miss tests."}
+        {"text": "The response proposes a new skill brief instead of creating files."},
+        {"text": "The brief names the job, trigger, output, likely resources, and reason to capture the workflow."},
+        {"text": "The response asks for confirmation before scaffolding the skill."}
       ]
     }
   ]
