@@ -18,6 +18,18 @@ If the shorthand has not appeared on skills.sh yet, install from the direct GitH
 npx skills add https://github.com/optiflow/skills_repo/tree/main/skills/create-skill
 ```
 
+Install `update-skill` with the skills CLI:
+
+```bash
+npx skills add optiflow/skills_repo --skill update-skill
+```
+
+If the shorthand has not appeared on skills.sh yet, install from the direct GitHub path:
+
+```bash
+npx skills add https://github.com/optiflow/skills_repo/tree/main/skills/update-skill
+```
+
 Install `back-brief` with the skills CLI:
 
 ```bash
@@ -41,6 +53,10 @@ npx skills add optiflow/skills_repo --list
 ### create-skill
 
 Create, update, validate, evaluate, optimize, and package AI agent skills.
+
+### update-skill
+
+Update existing skills with evidence, version severity, evals, validation, and rollback.
 
 ### back-brief
 

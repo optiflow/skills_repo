@@ -6,7 +6,8 @@
       "title": "Skill Authoring",
       "description": "Skills for creating and maintaining reusable agent skills.",
       "skills": [
-        "create-skill"
+        "create-skill",
+        "update-skill"
       ]
     },
     {

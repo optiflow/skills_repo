@@ -1,0 +1,3 @@
+display_name: Update Skill
+short_description: Update existing skills with evidence, versioning, evals, and rollback.
+default_prompt: Improve this existing skill only if evidence or real change shows it is stale, unsafe, unreliable, too broad, or failing repeated tasks.

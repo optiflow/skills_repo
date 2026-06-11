@@ -1,0 +1,120 @@
+{
+  "skill_name": "update-skill",
+  "evals": [
+    {
+      "id": "wrong-trigger-overlap",
+      "prompt": "Our pdf-review skill keeps firing for generic web article summaries, and the summarizer skill would be a better fit. Update the skill without changing its name.",
+      "expected_output": "A scoped update plan or patch that preserves the skill name, tightens the frontmatter description, adds should-not-trigger near-miss evals, and compares the new routing behavior against the old version.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The response preserves the existing skill name unless the user requests a rename.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check that the skill name stays unchanged."
+        },
+        {
+          "text": "The response updates trigger wording or scope boundaries instead of adding generic caution text.",
+          "type": "manual_or_script",
+          "evidence_hint": "Inspect changed frontmatter and scope text."
+        },
+        {
+          "text": "The response includes near-miss should-not-trigger evals.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check evals for generic article summary negatives."
+        }
+      ]
+    },
+    {
+      "id": "repeated-skipped-step",
+      "prompt": "Three traces show our release-note skill skips the required changelog diff review before drafting. Please update the skill so agents stop missing that step.",
+      "expected_output": "An evidence-based update that treats the repeated skipped step as valid evidence, adds or tightens the workflow step, adds an eval that reproduces the miss, and validates the new version against the old skill.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The response cites repeated evidence before changing the skill.",
+          "type": "manual_or_script",
+          "evidence_hint": "Look for the three traces or repeated failure as the reason."
+        },
+        {
+          "text": "The response adds an eval or reproduction for the skipped step.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check evals or validation notes for changelog diff review."
+        },
+        {
+          "text": "The response compares the updated skill with the original baseline.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check for old versus new validation or rollback."
+        }
+      ]
+    },
+    {
+      "id": "dependency-tool-change",
+      "prompt": "The analytics skill references the MCP tool query_table, but the server now exposes run_sql_query with a different result shape. Update the skill and keep downstream behavior clear.",
+      "expected_output": "A minor or major update that fixes the tool reference, documents the changed result shape, updates validation or eval coverage, and calls out any contract impact.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The response treats the MCP tool surface change as a valid update reason.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check the update gate or report evidence."
+        },
+        {
+          "text": "The response updates strict tool names and result shape guidance.",
+          "type": "manual_or_script",
+          "evidence_hint": "Inspect references to query_table and run_sql_query."
+        },
+        {
+          "text": "The response assigns version severity based on contract impact.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check severity and explanation."
+        }
+      ]
+    },
+    {
+      "id": "risk-profile-change",
+      "prompt": "This customer-support skill used to draft replies only. It now has access to send_email and can handle billing complaints. Update it safely.",
+      "expected_output": "A major update that adds safety behavior such as human review, narrower permissions, safer defaults, logging or validation, and evals for risky send actions.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The response marks the change as major because permissions, safety behavior, or risk changed.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check severity."
+        },
+        {
+          "text": "The response adds concrete guardrails or human review, not only generic caution.",
+          "type": "manual_or_script",
+          "evidence_hint": "Inspect safety steps."
+        },
+        {
+          "text": "The response includes validation for risky send or billing cases.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check evals or test plan."
+        }
+      ]
+    },
+    {
+      "id": "reject-one-off-tool-outage",
+      "prompt": "The report skill failed once because its chart export CLI crashed during an outage. Please update the skill so this never happens again.",
+      "expected_output": "A no-update recommendation unless the failure is reproduced or tied to stale instructions, with a tool-fix or retry follow-up separated from skill changes.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The response does not update the skill solely from one unreproduced failure.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check for a no-update or reproduce-first decision."
+        },
+        {
+          "text": "The response distinguishes a broken tool from a stale skill instruction.",
+          "type": "manual_or_script",
+          "evidence_hint": "Look for tool outage handling separate from skill edits."
+        },
+        {
+          "text": "The response suggests a small eval or reproduction before changing instructions.",
+          "type": "manual_or_script",
+          "evidence_hint": "Check next steps."
+        }
+      ]
+    }
+  ]
+}
