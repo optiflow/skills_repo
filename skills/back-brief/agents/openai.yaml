@@ -1,3 +1,3 @@
 display_name: Back Brief
-short_description: Confirm task intent before material execution
-default_prompt: Back-brief this task before executing so I can confirm or correct your understanding.
+short_description: Confirm the execution model before material action
+default_prompt: Back-brief this task before executing. Show the goal, success checks, constraints, plan, and open points so I can confirm, correct, or escalate.

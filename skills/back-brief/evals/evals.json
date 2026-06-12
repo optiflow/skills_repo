@@ -11,7 +11,7 @@
           "text": "Output includes Goal, Done when, Constraints, Plan, and Open points sections."
         },
         {
-          "text": "Output asks for confirmation or correction before file edits."
+          "text": "Output asks for confirm, correct, or escalate before file edits."
         },
         {
           "text": "Output identifies ambiguity around the new design and relevant files."
@@ -32,6 +32,9 @@
         },
         {
           "text": "Output does not claim it will delete files immediately."
+        },
+        {
+          "text": "Output treats deletion scope or approval authority as an open point."
         }
       ]
     },
@@ -63,6 +66,74 @@
         },
         {
           "text": "Output can answer directly or run a read-only listing command."
+        }
+      ]
+    },
+    {
+      "id": "confirmation-vs-back-brief",
+      "prompt": "Before you plan anything, just confirm you understood this: migrate the billing export job to the new queue by Friday, but do not change invoice formatting.",
+      "expected_output": "A short confirmation brief that checks receipt, intent, deadline, and fixed formatting constraint without turning it into a full execution plan.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output treats the request as a confirmation brief rather than a full back brief."
+        },
+        {
+          "text": "Output captures the Friday deadline and the no-formatting-change constraint."
+        },
+        {
+          "text": "Output asks for confirmation or correction before further planning."
+        }
+      ]
+    },
+    {
+      "id": "incident-critical-readback",
+      "prompt": "Incident bridge. Priority is contain possible token leakage. Back brief now: isolate the affected workers, preserve logs, and do not rotate credentials until forensics confirms capture.",
+      "expected_output": "An incident back brief that states the containment goal, immediate sequence, stop condition, approval or authority open point, and readback of the preserve-before-rotate instruction.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output includes the stop condition not to rotate credentials until forensic capture is confirmed."
+        },
+        {
+          "text": "Output treats authority, escalation, or incident commander approval as an open point."
+        },
+        {
+          "text": "Output uses a readback-style check for the critical preserve-before-rotate instruction."
+        }
+      ]
+    },
+    {
+      "id": "async-handoff-record",
+      "prompt": "Write a back brief for an async handoff: Priya owns the vendor shortlist by June 20, security review must finish before demos, and the notes include customer PII so keep the audience tight.",
+      "expected_output": "A concise async handoff back brief that records owner, date, dependency, sensitivity, unresolved questions, and explicit confirmation request.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output captures Priya as owner and June 20 as the due date."
+        },
+        {
+          "text": "Output states that security review must finish before demos."
+        },
+        {
+          "text": "Output treats customer PII and audience limits as constraints or open points."
+        }
+      ]
+    },
+    {
+      "id": "correction-loop",
+      "prompt": "Back brief the rollout. Correction: not 10% traffic, 5% traffic, and the rollback owner is Mei, not Sam.",
+      "expected_output": "A revised back brief that treats the correction as source of truth, calls out the changed traffic percentage and owner, then asks for confirmation before execution.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Output marks 5% traffic as the corrected value."
+        },
+        {
+          "text": "Output names Mei, not Sam, as the rollback owner."
+        },
+        {
+          "text": "Output asks for confirmation before execution."
         }
       ]
     }
