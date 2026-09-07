@@ -1,88 +1,43 @@
-# Trigger Optimization Reference
+# Trigger testing
 
-The `description` field is the main trigger surface for most skill systems. Optimize it after the skill's task behavior is good.
+The description is a discovery interface. Lead with the capability and main context. Add a boundary when it prevents a plausible wrong match. Test actual host behavior before making a claim about routing accuracy.
 
-## Description pattern
+## Cases and measurements
 
-A strong description says:
+Use real user language, file names, and partial context. Cover positive requests, requests that never name the skill, competing skills, and close negatives. A few cases are enough for a focused correction; wider release needs enough varied cases to expose missed and unwanted activations.
 
-1. What the skill does.
-2. What inputs or contexts it handles.
-3. What phrases, file types, workflows, or user intents should trigger it.
-4. What adjacent cases should still use it even if the user does not name the skill.
-
-Avoid a vague description such as:
-
-```text
-Helps with documents.
-```
-
-Prefer a concrete description such as:
-
-```text
-Create, edit, inspect, and transform professional .docx documents. Use when the user asks to draft, revise, preserve formatting, add comments, handle tracked changes, extract text or tables, or fix Word document structure.
-```
-
-## Trigger eval set
-
-Create 16-24 realistic queries:
-
-- 8-12 should-trigger cases.
-- 8-12 should-not-trigger cases.
-- Include near-misses, not only obvious negatives.
-- Include messy real prompts with filenames, partial context, typos, and casual wording.
-- Include cases where the user does not name the skill but clearly needs the workflow.
-
-Schema:
+Keep expected labels separate from observations:
 
 ```json
 [
-  {
-    "id": "casual-docx-edit",
-    "query": "my manager sent me the board paper in /downloads/final_draft.docx and I need the tracked changes accepted but comments kept",
-    "should_trigger": true,
-    "triggered": true
-  },
-  {
-    "id": "pdf-near-miss",
-    "query": "can you summarize this PDF contract and flag risky clauses",
-    "should_trigger": false,
-    "triggered": false
-  }
+  {"id": "invoice-match", "query": "Match July invoices to these payment exports and list the gaps.", "should_trigger": true},
+  {"id": "invoice-writing", "query": "Write a polite note asking a customer to pay an invoice.", "should_trigger": false}
 ]
 ```
 
-The `triggered` field is filled after testing a description.
+Run each query in the target host with the candidate discoverable and without forcing its invocation. Record whether the host actually loaded it, using the host's invocation or file-read trace. Add `triggered: true` or `triggered: false` only for observed results. Use null or omit the field for unrun or missing observations. A tool error is not automatically a negative decision.
 
-## Train and held-out split
+Keep the surrounding skills catalogue stable between descriptions. Explicit mentions such as `$skill-name` check availability and invocation; they do not establish implicit matching quality. Asking an LLM whether a description matches a query is a useful design check, but it is a proxy for host selection.
 
-Use about 60% of cases for improving the description and 40% as held-out tests. Choose the final description by held-out score. This reduces overfitting.
+For manual query editing, an optional [review template](../assets/trigger_eval_review.html) is included. Escape the skill name and description as HTML. Replace its data placeholder with JSON whose `<`, `>`, and `&` characters are escaped as Unicode sequences so query text cannot close the script element. Save the filled template outside the skill. The exported file contains labels and queries, not observed trigger results.
 
-## Metrics
+## Avoid test-set leakage
 
-Use `scripts/score_trigger_evals.py` to compute:
+Use development cases to revise descriptions. If comparing several candidates, use separate validation cases to select one. Freeze that description before looking at final test cases. Do not repeatedly choose the highest score on the final test set and still call it held out. If the test set informs another revision, treat it as development evidence and obtain fresh test cases.
 
-- Accuracy: all correct trigger decisions.
-- Precision: when it triggered, how often it should have triggered.
-- Recall: when it should trigger, how often it did.
-- Specificity: when it should not trigger, how often it stayed off.
-- F1: balance of precision and recall.
+Keep duplicate prompts and close paraphrases in the same split. With a tiny set, report it as exploratory rather than implying a reliable estimate. Repeat borderline cases when the host's choices vary.
 
-For narrow skills, favor precision. For high-value helper skills where missing the skill is costly, favor recall, but still protect near-miss negatives.
+## Score observations
 
-## Iteration rules
+Run from the create-skill directory, or use the helper's absolute path:
 
-When the skill undertriggers, add concrete contexts and common user phrasing.
+```bash
+python -B scripts/score_trigger_evals.py /path/to/trigger-results.json \
+  --output /path/to/trigger-score.json
+```
 
-When the skill overtriggers, add sharper boundaries by naming adjacent tasks that should use a different skill or normal tools.
+The helper scores existing observations; it does not invoke a model, run the host, or optimize descriptions. JSON booleans are required; the strings `"true"` and `"false"` are invalid.
 
-Do not stuff the description with every keyword. A long, noisy description can harm routing. Use compact clusters of intent.
+Report coverage with accuracy, precision, recall, specificity, and F1. Missing observations reduce coverage and are excluded from scored outcomes. Undefined metrics are null. Show false positives and false negatives so the user can judge the tradeoff; a high score with low coverage is weak evidence.
 
-## Before applying
-
-Show the user:
-
-- Old description.
-- New description.
-- Trigger eval score changes.
-- Any remaining failure cases.
+Choose a description for the actual task's error costs. More keywords can raise recall while drawing the skill into unrelated tasks. Explain the change and any observed differences; if no host test ran, say the description was reviewed but its routing was not measured.

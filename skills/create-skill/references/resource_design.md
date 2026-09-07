@@ -1,59 +1,37 @@
-# Resource Design Reference
+# Resource design
 
-Use this when deciding what belongs inside a skill.
+Start with the freedom the task allows. Add precision where a wrong choice has a concrete cost.
 
-## Decision table
-
-| Need | Best place | Why |
+| Need | Place | Include when |
 |---|---|---|
-| Trigger matching | `SKILL.md` frontmatter `description` | Always visible before the skill loads. |
-| Core workflow | `SKILL.md` body | Loaded after trigger; should be short and actionable. |
-| Detailed domain knowledge | `references/` | Loaded only when useful. |
-| Deterministic or repeated code | `scripts/` | Reliable and token efficient. |
-| Templates or files copied into outputs | `assets/` | Used without loading all content into the model. |
-| Test prompts and assertions | `evals/` | Lets maintainers measure improvement. |
-| Specialist review instructions | `agents/` | Keeps grader, analyzer, and comparator roles separate. |
+| Capability and trigger | Frontmatter description | Required for discovery; lead with the main job. |
+| Shared outcome, decisions, constraints | `SKILL.md` body | Required task guidance; keep conditional detail elsewhere. |
+| Domain rules, schemas, substantial examples | `references/` | The agent needs information it would otherwise have to rediscover. |
+| Repeated transformation or fragile operation | `scripts/` | Running maintained code improves reliability or avoids repeated code generation. |
+| Template, image, font, starter project | `assets/` | A file is copied or adapted into the result. |
+| Prompts, fixtures, expected outcomes | `evals/` | Maintainers will test behavior again. Keep results outside the skill. |
+| Host metadata or independent review role | `agents/` | The target host uses it, or the evaluation needs a separate role. |
 
-## Degree of freedom
+## Instructions and context
 
-| Freedom | Use when | Skill form |
-|---|---|---|
-| High | Multiple outputs can be good; judgment matters. | Principles, examples, selection rules. |
-| Medium | A stable method exists, but cases vary. | Checklist, pseudocode, parameterized scripts. |
-| Low | Fragile steps, strict formats, or repeated transforms. | Tested scripts and narrow instructions. |
+One file is enough for a simple skill. Use prose and decision criteria for open work; examples or configurable scripts for a preferred pattern; exact steps and tested code for fragile operations. A universal checklist is rarely the right starting point.
 
-Start with the lowest freedom needed for reliability, then loosen only where the task needs judgment.
+Link resources at the decision where they become useful and say whether to read, run, or copy them. Keep each important rule in one maintained location. Short references need no contents page; add one or search terms when navigation becomes hard. Avoid chains that require loading many irrelevant files before reaching the needed rule.
 
-## Context hygiene
+A file can be large without being loaded, but reading it still consumes context. Include maintained, task-specific information rather than copied manuals. Record source dates for facts that can drift and provide an official refresh route when needed.
 
-Keep `SKILL.md` under 500 lines when possible. Move details out when they are optional, domain-specific, long, or only relevant to one branch of the workflow.
+## Helpers and assets
 
-Do not duplicate the same rule in `SKILL.md` and a reference file. Duplication makes later updates unsafe because one copy will become stale.
+Accept paths and options as arguments. Resolve bundled resources relative to the script or skill, not an assumed project directory. Declare dependencies. Report actionable errors with nonzero exit codes; do not silently fabricate a successful result after an operation fails.
 
-Every reference file should be linked from `SKILL.md`. For files over 100 lines, add a short table of contents near the top.
+Test the actual input-to-output operation, including a likely invalid input. For mutating helpers, preserve user inputs and define the required confirmation, retry, and stopping behavior for that operation. Prose about permission does not grant tool access.
 
-Avoid deep trees. One level below `references/` is usually enough.
+Keep secrets and private client data out of distributable fixtures. Keep needed licenses and notices. Extra root documentation is acceptable when required for licensing, packaging, or the user's deliverable; otherwise keep maintainer review notes outside the installed skill.
 
-## Script design
+## Packaging details
 
-Write scripts when the agent would otherwise repeat brittle code. Good scripts are:
+The package helper validates before writing and preserves an existing archive if validation fails. Output belongs outside the skill directory. It normalizes timestamps and file modes for reproducible bytes while preserving whether a file is executable. Nested symlinks are rejected because they can include files outside the intended package.
 
-- Narrow: one clear job.
-- Parameterized: file paths and options come from arguments.
-- Safe: no hidden network calls, credential use, or destructive defaults.
-- Testable: include a simple example command or representative test input.
-- Transparent: print useful errors and exit non-zero on failure.
+By default it excludes hidden files, common credential filenames and key extensions, caches, environments, build folders, previous skill archives, eval workspaces, and `evals/`. Use `--include-evals` to include shareable maintainer cases. The exclusions are not a proof that other files contain no private data. Review the actual archive manifest, licensing, and intended assets before sharing.
 
-Do not hide important reasoning inside scripts. The skill should explain when and why to use the script.
-
-## Asset design
-
-Use assets for files that are copied, filled, edited, or used as output material. Do not use assets as a dumping ground for documentation. If the model should read a file for knowledge, put it under `references/`.
-
-Never package private credentials, proprietary files, or fonts unless the user has the right to share and use them in the skill.
-
-## Root-folder hygiene
-
-A clean root helps the agent see what matters. In most skills, the root should contain only `SKILL.md` and known resource folders.
-
-Avoid extra files such as `README.md`, `CHANGELOG.md`, `INSTALL.md`, and informal notes unless they are part of the task itself.
+`init_skill.py --force` permits an existing empty directory; it never overwrites a populated skill. Unknown resource arguments are rejected before writing. Input and output paths supplied to helpers follow the caller's current directory; bundled helper paths follow the loaded skill's directory.

@@ -2,25 +2,95 @@
   "skill_name": "create-skill",
   "evals": [
     {
-      "id": "create-narrow-file-transform-skill",
-      "prompt": "Create a skill for converting messy clinic CSV exports into a cleaned Excel workbook with one summary sheet and one validation sheet.",
-      "expected_output": "A lean skill with scripts for deterministic CSV/XLSX handling, realistic evals, validation guidance, and packaging steps.",
+      "id": "create-small-portable-skill",
+      "prompt": "Create a small instruction-only skill named status-brief for turning rough project updates into a short status note. Preserve supplied names, dates, and figures; label missing information instead of inventing it. Include optional Codex UI metadata. I do not need helper scripts or a benchmarking framework.",
+      "expected_output": "A usable status-brief/SKILL.md and valid optional OpenAI metadata, proportionate to the stated scope.",
       "files": [],
       "assertions": [
-        {"text": "The draft separates deterministic transformation code into scripts rather than prose-only instructions."},
-        {"text": "The draft includes at least two realistic eval prompts or an evals.json scaffold."},
-        {"text": "The SKILL.md frontmatter description includes trigger contexts, not only a title."}
+        {
+          "text": "The skill defines how to use supplied facts and handle missing information."
+        },
+        {
+          "text": "The agent creates the requested files without another approval pause."
+        },
+        {
+          "text": "Any OpenAI metadata has an interface mapping and exact skill invocation."
+        },
+        {
+          "text": "The result does not add unrequested helper scripts or an eval framework."
+        }
       ]
     },
     {
-      "id": "suggest-skill-for-repeated-workflow",
-      "prompt": "We have done the same vendor onboarding review three times: summarize intake notes, check missing risk fields, draft follow-up questions, and produce a short decision memo. I did not ask you to create a skill yet, but this keeps coming up.",
-      "expected_output": "A brief skill proposal, not file changes, with the job, trigger, output, likely resources, and why the workflow is worth capturing, plus a request for confirmation before scaffolding.",
+      "id": "update-existing-metadata",
+      "prompt": "Update the display name of this existing skill to Weekly Status, leaving its other UI values, explicit-only policy, dependencies, and SKILL.md unchanged.",
+      "expected_output": "A narrow update preserving all unrelated settings and files.",
+      "files": [
+        "fixtures/weekly-status/SKILL.md",
+        "fixtures/weekly-status/agents/openai.yaml"
+      ],
+      "assertions": [
+        {
+          "text": "Only interface.display_name changes."
+        },
+        {
+          "text": "The existing explicit-only invocation policy and dependency values are preserved."
+        }
+      ]
+    },
+    {
+      "id": "suggest-repeated-workflow",
+      "prompt": "We keep doing the same vendor onboarding review: find missing intake details and prepare a decision note. Would this be worth capturing as a reusable skill? I have not decided to create it yet.",
+      "expected_output": "A short proposal explaining the job, trigger, expected output, and value before file creation.",
       "files": [],
       "assertions": [
-        {"text": "The response proposes a new skill brief instead of creating files."},
-        {"text": "The brief names the job, trigger, output, likely resources, and reason to capture the workflow."},
-        {"text": "The response asks for confirmation before scaffolding the skill."}
+        {
+          "text": "The agent proposes the skill without creating it."
+        }
+      ]
+    },
+    {
+      "id": "no-independent-runner",
+      "prompt": "Review this draft skill and improve unclear instructions. This environment has no independent agent runner. Give me the revised files and an honest account of what you checked.",
+      "expected_output": "A supported revision with structural or author walkthrough checks clearly separated from unrun benchmarks.",
+      "files": [
+        "fixtures/weekly-status/SKILL.md"
+      ],
+      "assertions": [
+        {
+          "text": "The result does not claim a measured baseline or host-trigger score without observations."
+        }
+      ]
+    },
+    {
+      "id": "retune-trigger-boundary",
+      "prompt": "Our invoice reconciliation skill keeps activating when I only ask for a reminder email about an invoice. Review its description and propose cases that test this boundary. Do not claim host measurements until we run them.",
+      "expected_output": "A precise trigger revision with realistic positive and near-miss negative cases, labelled as unrun.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The proposed tests distinguish reconciling data from writing payment reminders."
+        },
+        {
+          "text": "Expected labels are kept separate from observed triggering."
+        }
+      ]
+    },
+    {
+      "id": "model-upgrade-scope",
+      "prompt": "Our skill asks for confirmation before every file edit and keeps rerunning all checks after they pass. Audit it for a newer model while preserving the deployment approval and required integration test.",
+      "expected_output": "Remove redundant process while retaining the actual deployment boundary and required validation.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The revision distinguishes authorized local edits from deployment authorization."
+        },
+        {
+          "text": "The required integration check remains in the workflow."
+        },
+        {
+          "text": "The agent does not promise better performance on untested models."
+        }
       ]
     }
   ]

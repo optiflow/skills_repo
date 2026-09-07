@@ -1,231 +1,120 @@
 ---
 name: create-skill
-description: Create new AI agent skills from explicit user requests or confirmed repeated workflows. Use when the user asks to create, design, scaffold, validate, or package a new skill; asks whether a recurring workflow should become a skill; or approves turning a repeated workflow into a skill. If repeated work is only observed, suggest a brief skill proposal and ask before creating files. Do not use for maintenance of already-created skills; use update-skill instead.
+description: Create, review, improve, test, and package AI agent skills built around SKILL.md. Use when a user asks to turn a workflow into a reusable skill, revise an existing skill, diagnose its behavior or triggering, or compare skill versions. Ordinary task execution and skill installation alone do not need this workflow.
+compatibility: Instructions work across agents with skill support. Bundled helpers require Python 3.10+ and PyYAML; behavioral evaluations need a separate agent or host runner.
 ---
 
 # Create Skill
 
-Create skills that are small enough to load well and measured enough to trust.
+Produce a skill that adds useful knowledge or a reliable method to the target agent, with evidence suited to the change. The required entrypoint is `SKILL.md`, singular.
 
-Use the full loop for important, broad, fragile, or user-facing skills. Use the light loop for small private skills, but still validate the folder and test any scripts.
+## Working rules
 
-## Core principles
+- Treat an explicit request to create or update a skill as authorization for that work. Use the context already supplied and resolve routine choices. If you only notice repeated work, propose the skill before creating it. Ask only for missing information that materially changes the result or for an action outside the user's authorization.
+- A skill supplies task guidance. It does not override system or developer instructions, the user's current request, tool permissions, or approval controls. Keep genuine workflow constraints; distinguish requirements from defaults and examples.
+- Describe the desired result, the evidence to use, and the constraints that matter. Give capable models room to choose the method. Use fixed steps where order or precision affects correctness. Remove generic tutorials, blanket approval pauses, repeated self-checks, and tool-use demands that do not help the task.
+- Keep scope and names stable during an update. Inspect existing resources and their callers before removing them. Preserve unrelated metadata, invocation policy, dependencies, and user edits.
 
-- **Lean context:** Treat every token as a shared cost. Keep `SKILL.md` focused on the core workflow and navigation. Move details into `references/`.
-- **Right freedom:** Use prose for flexible judgment, pseudocode for stable patterns, and scripts for fragile or repeated work.
-- **Progressive disclosure:** Put trigger logic in frontmatter, core operating steps in `SKILL.md`, and optional depth in bundled resources.
-- **Evidence first:** Do not rely on a skill because it sounds good. Test it on realistic prompts and compare against a baseline when the environment allows.
-- **Generalize from feedback:** Improve the reusable method, not only the example that failed.
-- **No surprises:** Do not create skills for malware, hidden data access, deception, or actions the user would not expect from the skill description.
+## Choose the amount of work
 
-## Resource map
+| Situation | Useful scope |
+|---|---|
+| A narrow correction | Make the focused edit; validate the changed contract and rerun the affected case. |
+| A new, small skill with a known workflow | Write the smallest useful instructions; check realistic success and boundary cases; test any helper code. |
+| Broad behavior changes, shared use, fragile actions, or a performance claim | Define cases early, compare independent runs, inspect artifacts, and check regressions. |
 
-Read these files only when needed:
+A short skill can be one file. Do not require a folder tree, benchmark, reviewer, or packaging step when it adds no value. Existing project requirements and the user's requested checks still apply.
 
-- `references/resource_design.md`: Decide what belongs in `SKILL.md`, `scripts/`, `references/`, `assets/`, `agents/`, and `evals/`.
-- `references/eval_schemas.md`: Write `evals.json`, `eval_metadata.json`, `grading.json`, `timing.json`, and `benchmark.json`.
-- `references/trigger_optimization.md`: Build should-trigger and should-not-trigger query sets and score trigger descriptions.
-- `references/workflow_modes.md`: Adapt the workflow when there are no subagents, no browser, read-only installed skills, or limited tools.
-- `references/openai_yaml.md`: Create optional `agents/openai.yaml` UI metadata.
-- `agents/grader.md`: Use when grading assertions against outputs.
-- `agents/analyzer.md`: Use when interpreting benchmark results.
-- `agents/comparator.md`: Use when doing blind A/B comparison between two skill versions.
+## 1. Establish the contract and evidence
 
-## Skill anatomy
+Infer from the request and current files:
 
-A normal skill folder should look like this:
+- **Job and output:** The user task, inputs, result, and observable success criteria.
+- **Routing:** Requests that need the skill and nearby requests that do not.
+- **Environment:** Target hosts and models, available tools, file location, and any needed dependencies.
+- **Constraints:** Required formats, permissions, irreversible actions, and failure or stopping conditions.
 
-```text
-skill-name/
-├── SKILL.md              # required: frontmatter + concise instructions
-├── scripts/              # optional: deterministic or repeated code
-├── references/           # optional: detailed docs loaded only when useful
-├── assets/               # optional: templates, icons, boilerplate, sample files
-├── evals/evals.json      # optional: test prompts and assertions
-└── agents/               # optional: UI metadata or specialist agent instructions
-```
+For updates, save or identify the original version and inspect the reported failure before rewriting. For new skills, look for information the base model lacks: local schemas, business rules, approved templates, or repeatable operations. A preference or stable workflow can justify a skill even if the base model can already do the task.
 
-Keep the root clean. Avoid extra `README.md`, changelog, install guide, and similar files unless the user explicitly needs them as part of the skill output.
+Before writing extensive instructions, define a small set of real tasks and what would count as success. Include a representative case and a plausible failure or boundary case; add cases for materially different modes. If making an improvement claim, establish the baseline early. Do not invent failures to justify more instructions.
 
-## Workflow
+## 2. Write the smallest useful skill
 
-Start with the right level of permission:
-
-- If the user explicitly asks for a new skill, proceed with this creation workflow.
-- If repeated work is only inferred, propose a one-paragraph skill brief first: job, trigger, output, likely resources, and why it is worth capturing.
-- Do not scaffold files until the user confirms.
-
-### 1. Capture intent
-
-Extract what the user has already said before asking anything. Fill these fields:
-
-- **Job:** What should the skill help an agent do?
-- **Trigger:** What user requests or contexts should activate it?
-- **Output:** What should the final answer, file, code, or artifact look like?
-- **Inputs:** What files, APIs, tools, dependencies, or domain rules matter?
-- **Success:** How will a human or script know the skill worked?
-- **Risk:** What could fail, leak, surprise the user, or cause harm?
-
-Ask at most the few questions that block safe progress. When the user has provided enough detail, continue.
-
-### 2. Decide the skill shape
-
-Classify the task before writing:
-
-- **High freedom:** Many good outputs exist. Use compact principles, examples, and selection rules.
-- **Medium freedom:** A preferred pattern exists. Use a checklist, pseudocode, or parameterized scripts.
-- **Low freedom:** Small mistakes break the result. Use tested scripts with narrow inputs.
-
-Then map repeated work to resources:
-
-- Use `scripts/` when the same code would be rewritten often or precision matters.
-- Use `references/` for detailed domain knowledge, schemas, policies, examples, and API notes.
-- Use `assets/` for templates, images, boilerplate, fonts, and files that the agent copies or edits.
-- Use `evals/` for test prompts, expected results, and assertions.
-- Use `agents/` for optional reviewer, grader, comparator, analyzer, or UI metadata instructions.
-
-### 3. Initialize the folder
-
-For a new skill, run:
-
-```bash
-scripts/init_skill.py my-skill --path skills --resources scripts,references --evals --openai-agent
-```
-
-Use lowercase letters, digits, and hyphens only. Keep names short, action-led, and under 64 characters. The folder name should match the `name` field.
-
-### 4. Draft `SKILL.md`
-
-Write frontmatter first:
+Use valid YAML frontmatter with a short name and a discriminating description:
 
 ```yaml
 ---
-name: my-skill
-description: What the skill does. Use when the user asks for X, works with Y files, needs Z workflow, or describes related real-world cases even if they do not name the skill.
+name: reconcile-invoices
+description: Reconcile invoice exports with payment records and report unmatched items. Use when comparing invoice and payment files or investigating a reconciliation mismatch.
 ---
 ```
 
-Put all trigger rules in `description`. The body is loaded only after the skill triggers, so body-level trigger guidance arrives too late.
+For the portable core, names use 1-64 lowercase ASCII letters, digits, and single internal hyphens, and match the folder name. Descriptions are nonempty strings of at most 1,024 characters. Supported optional fields include `license`, `compatibility`, and string-valued `metadata`; tool and invocation extensions depend on the host.
 
-In the body:
+Put the main capability and trigger early in the description: some hosts shorten discovery metadata. Add exclusions when they prevent a likely routing error. Keep detailed workflow branches and resource selection in the body. Do not use keyword stuffing or aggressive trigger language without evidence that it helps the target host.
 
-- Start with the outcome the skill produces.
-- Give the smallest workflow that works.
-- Link every reference file from `SKILL.md` and say when to read it.
-- Explain why important choices matter instead of using rigid rules everywhere.
-- Include short examples when they prevent likely mistakes.
-- Remove generic advice the base model already knows.
+Write the body around the task's outcome and decisions. Preserve non-obvious constraints and explain their purpose briefly. Use examples for likely ambiguity, not to prescribe the wording of every result. Do not demand a visible chain of thought; ask for concise reasons, evidence, or intermediate artifacts only when useful to the task.
 
-### 5. Validate and test scripts
+Keep shared guidance in the entrypoint. Link optional detail with a clear reading condition. The 500-line guidance is an upper bound to watch, not an authoring target. See [resource design](references/resource_design.md) for file placement and [model guidance](references/model_guidance.md) when revising instructions for a new model or runtime.
 
-Run:
+## 3. Add resources only when they earn their place
 
-```bash
-scripts/quick_validate.py path/to/my-skill
-```
+Choose instruction-only authoring unless another resource improves the work. Use scripts for repeated or fragile operations, references for conditional knowledge, and assets for files copied into output. Avoid depending on another skill unless it exists in the target environment and is needed for this workflow.
 
-Fix errors before packaging. Run every important script with representative inputs. If there are many similar scripts, test a representative sample and note any limits.
+Resolve helper paths from this `SKILL.md`, not the caller's project. The examples run from the create-skill directory; use absolute helper paths elsewhere. Helpers require Python 3.10+ and [PyYAML](scripts/requirements.txt) in an available or isolated environment.
 
-### 6. Create evals
-
-Create 2-5 realistic prompts in `evals/evals.json`. Use prompts a real user would type, including messy details, file names, edge cases, and partial context.
-
-Add assertions only when they can be checked objectively. For subjective work, use human review and optional blind comparison.
-
-### 7. Run with-skill and baseline tests
-
-When the environment supports independent runs, test each prompt twice:
-
-- **With skill:** use the candidate skill.
-- **Baseline:** use no skill.
-
-Save outputs under a sibling workspace:
-
-```text
-my-skill-workspace/
-└── iteration-1/
-    └── eval-name/
-        ├── with_skill/outputs/
-        └── without_skill/outputs/
-```
-
-Save `eval_metadata.json`, `timing.json`, and `grading.json` where available. See `references/eval_schemas.md` for exact shapes.
-
-When the environment cannot run independent agents, run the test prompts inline, state the limit, and still collect outputs for review.
-
-### 8. Grade, review, and analyze
-
-Grade objective assertions with scripts when possible. Otherwise, use `agents/grader.md`.
-
-Aggregate results:
+For a new skill, the initializer is optional:
 
 ```bash
-scripts/aggregate_benchmark.py my-skill-workspace/iteration-1 --skill-name my-skill
+python -B scripts/init_skill.py my-skill --path /path/to/skills \
+  --description "Describe the actual capability and its trigger."
 ```
 
-Create a static review page:
+Add resource, eval, or OpenAI metadata flags only when needed. Replace scaffold TODO markers before validation. Edit existing skills directly or in a writable copy; do not initialize them again.
+
+For Codex UI metadata, read [OpenAI metadata](references/openai_yaml.md). Keep UI fields under `interface` and preserve existing policy and dependencies. Automatic selection is the normal default; retain an existing explicit-only setting unless the user asks to change it.
+
+## 4. Validate structure and behavior
 
 ```bash
-scripts/generate_review.py my-skill-workspace/iteration-1 --skill-name my-skill --benchmark my-skill-workspace/iteration-1/benchmark.json
+python -B scripts/quick_validate.py /path/to/my-skill
 ```
 
-Use `agents/analyzer.md` to look for:
+Fix structural errors and review warnings; `--strict` also fails on warnings. Validation checks metadata, scaffolds, local links, eval structure, and Python syntax. Its secret scan is a heuristic. Passing does not prove behavior or installation.
 
-- Assertions that pass both skill and baseline.
-- Flaky prompts or high variance.
-- Token or time cost that outweighs gains.
-- Repeated helper code that belongs in `scripts/`.
-- Missing references or unclear trigger wording.
+Run each new or changed helper with representative input and a meaningful failure case. Check integrations and the complete workflow when a change crosses components. Inspect rendered results when appearance is part of success. Once applicable checks pass, repeat or broaden them only for a new change, failure, or unresolved concern.
 
-### 9. Improve without overfitting
+For behavioral tests, use realistic prompts and observable outcomes. Keep instructions and outputs separate from the evaluator's expected answers. New skills compare against no skill; updates compare against the saved original, with an optional no-skill check to see whether the skill is still needed. Use fresh runs with the same task, input files, model, settings, tools, and permissions. Explicit invocation tests task execution; it does not measure automatic discovery.
 
-Read transcripts or outputs, not just final scores. Improve the reusable method:
+Read [workflow modes](references/workflow_modes.md) for independent runs and limited environments, and [evaluation schemas](references/eval_schemas.md) when saving results. An author walking through their own draft is a useful smoke check, not an independent benchmark. Record missing observations as missing, and state which hosts and models were actually tested.
 
-- Remove text that did not help.
-- Add scripts for repeated fragile work.
-- Add references for stable domain knowledge.
-- Clarify choices the agent misunderstood.
-- Replace brittle “always/never” rules with the reason behind the rule unless the output format truly requires them.
-- Keep failures from becoming one-off patches.
+## 5. Review results and make supported changes
 
-Rerun the same evals after each meaningful revision. Add new evals only after the current ones no longer reveal useful failures.
+Inspect outputs and relevant tool traces, not scores alone. Check whether a failure came from routing, missing instructions, a broken helper, unavailable inputs, or the test itself. Fix the cause, retain working constraints, and rerun affected cases. For repeated or uncertain results, add trials before concluding that a change helped.
 
-### 10. Optimize the trigger description
-
-After the skill works on task quality, tune the `description` field.
-
-Create a trigger eval set with realistic should-trigger and should-not-trigger prompts. Include near-misses. Split into train and held-out test cases. Choose the description that performs best on held-out cases, not the one that only fits the training examples.
-
-Use:
+For a recorded evaluation, the optional helpers are:
 
 ```bash
-scripts/score_trigger_evals.py trigger_results.json --output trigger_score.json
+python -B scripts/aggregate_benchmark.py /path/to/iteration-1 --skill-name my-skill
+python -B scripts/generate_review.py /path/to/iteration-1 --skill-name my-skill
 ```
 
-Then update the frontmatter and show the user the before/after description and scores.
+The aggregator reports descriptive comparisons only for matched cases, assertions, settings, and observation coverage. Inspect the evidence. Use the static page for artifact review; pending user feedback is not acceptance, but does not prevent delivery of an accurately labelled draft.
 
-### 11. Package and present
+Use [grader](agents/grader.md), [analyzer](agents/analyzer.md), or [comparator](agents/comparator.md) instructions only when those roles help and independent agents are available and permitted. Do not spawn a reviewer for every small edit.
 
-Package only after validation passes:
+For discovery problems or wider release, read [trigger testing](references/trigger_optimization.md). Tune on development cases, select on validation cases, and keep a final test set untouched until release assessment. If you revise after seeing that test set, it is no longer held out. Do not present classifier judgments or synthetic fixture results as measured host triggering.
+
+## 6. Deliver with an accurate status
+
+Return the revised skill and a short account of what changed, why, what ran, and what remains untested. Separate structural validation, behavioral observations, and measured comparisons. Do not promise improvement across untested models.
+
+Package when the user asks or an archive makes the handoff useful:
 
 ```bash
-scripts/package_skill.py path/to/my-skill --output dist
+python -B scripts/package_skill.py /path/to/my-skill --output /path/to/dist
 ```
 
-By default, exclude eval workspaces, caches, and test review pages. Include evals only when the user wants future maintainers to rerun them:
+The helper validates the source and writes a reproducible ZIP with a `.skill` extension outside the skill folder. Inspect the archive before sharing; see [packaging details](references/resource_design.md). Include evals only when maintainers need them. Follow the target host's installation method: a `.skill` archive is a transport option, and editing source does not install or publish it.
 
-```bash
-scripts/package_skill.py path/to/my-skill --output dist --include-evals
-```
-
-## Quality gates
-
-A skill is ready when all applicable gates pass:
-
-- **Trigger gate:** The `description` states what the skill does and where it applies, including realistic adjacent contexts.
-- **Context gate:** `SKILL.md` is lean, and all extra detail is discoverable from direct links.
-- **Resource gate:** Scripts, references, and assets each have a clear reason to exist.
-- **Execution gate:** Important scripts run on representative inputs.
-- **Evidence gate:** Realistic tests show better quality, speed, cost, consistency, or safety than baseline.
-- **Review gate:** Human feedback has been addressed or clearly marked as out of scope.
-- **Package gate:** The package contains no secrets, caches, workspaces, or surprise files.
+The dated sources and decisions behind this workflow are in [source notes](references/source_notes.md). Read them when checking upstream changes or resolving a conflict between authoring guides.

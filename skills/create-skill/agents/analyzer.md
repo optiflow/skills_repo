@@ -2,6 +2,8 @@
 
 Analyze benchmark results and review outputs after grading.
 
+First check paired task inputs, runtime provenance, assertion coverage, missing runs, and repeated-trial variance. Separate observed results from hypotheses and avoid causal claims from unmatched runs.
+
 ## Look for signal
 
 - Did `with_skill` beat the baseline on pass rate?

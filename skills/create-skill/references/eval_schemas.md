@@ -1,140 +1,114 @@
-# Evaluation Schemas
+# Evaluation schemas
 
-Use these shapes for test prompts, run metadata, grading, timing, and benchmark files.
+Contents: test cases, layout, run provenance, grading, timing, aggregate results. These are this skill's local interchange formats, not a universal Agent Skills standard or the exact schema of either upstream creator.
 
-## `evals/evals.json`
+## Test cases: `evals/evals.json`
 
 ```json
 {
   "skill_name": "my-skill",
   "evals": [
     {
-      "id": "extract-table-edge-case",
-      "prompt": "The realistic user task prompt.",
-      "expected_output": "What a good result should contain or do.",
-      "files": [],
+      "id": "reconcile-duplicate-invoice",
+      "prompt": "Match these invoice and payment exports. Flag duplicate invoice IDs and unmatched amounts.",
+      "expected_output": "A reconciliation with preserved inputs and a clear list of exceptions.",
+      "files": ["fixtures/invoices.csv", "fixtures/payments.csv"],
       "assertions": [
-        {
-          "text": "Output includes a CSV file with headers patient_id, age, score.",
-          "type": "manual_or_script",
-          "evidence_hint": "Check generated CSV header row."
-        }
+        {"text": "Both rows with duplicate invoice ID INV-17 appear in the exceptions output."}
       ]
     }
   ]
 }
 ```
 
-`id` should be descriptive and stable. Avoid `eval-0` as the only name.
-
-`files` may contain paths to input files used by the prompt. Keep test files small and safe to share.
-
-`assertions` should be objective. Do not force assertions onto writing taste, visual design, or strategy advice unless the user gives clear criteria.
-
-## `eval_metadata.json`
-
-Save one file per eval directory.
-
-```json
-{
-  "eval_id": "extract-table-edge-case",
-  "eval_name": "extract-table-edge-case",
-  "prompt": "The exact task prompt used for this run.",
-  "expected_output": "What good looks like.",
-  "assertions": [
-    {"text": "The output preserves all rows from the source table."}
-  ]
-}
-```
+IDs are unique, nonempty strings. `files` are test inputs relative to the evals directory unless the runner records a different base. Copy the same bytes into each isolated run. Do not give expected outputs or grader notes to the agent executing the task. Do not include private data in shareable fixtures.
 
 ## Workspace layout
 
+Store observations in a sibling workspace, outside the installed skill:
+
 ```text
-my-skill-workspace/
-└── iteration-1/
-    ├── benchmark.json
-    ├── benchmark.md
-    └── extract-table-edge-case/
-        ├── eval_metadata.json
-        ├── with_skill/
-        │   ├── outputs/
-        │   ├── timing.json
-        │   └── grading.json
-        └── without_skill/
-            ├── outputs/
-            ├── timing.json
-            └── grading.json
+my-skill-workspace/iteration-1/
+  reconcile-duplicate-invoice-trial-1/
+    eval_metadata.json
+    with_skill/
+      run_metadata.json
+      grading.json
+      timing.json
+      outputs/
+    old_skill/
+      run_metadata.json
+      grading.json
+      timing.json
+      outputs/
 ```
 
-For updates to an existing skill, use `old_skill/` or `previous_skill/` instead of `without_skill/`.
+Use `without_skill` for a new skill baseline. `old_skill`, `previous_skill`, and `baseline` are also recognized. Repeat a case in a separate case directory with the same `eval_id` and a distinct `trial_id`. Both arms in a case share its exact task and inputs.
 
-## `timing.json`
+## Case and run provenance
+
+`eval_metadata.json` sits in the case directory:
 
 ```json
 {
-  "total_tokens": 84852,
-  "duration_ms": 23332,
-  "total_duration_seconds": 23.332
+  "eval_id": "reconcile-duplicate-invoice",
+  "trial_id": "1",
+  "eval_name": "Duplicate invoice reconciliation",
+  "prompt": "The exact task given to both arms.",
+  "input_hashes": {"invoices.csv": "record-the-actual-file-hash"}
 }
 ```
 
-When token or timing data is unavailable, omit the file or set values to `null`. Do not invent measurements.
-
-## `grading.json`
+Record `run_metadata.json` in each arm from the actual runner:
 
 ```json
 {
-  "run_id": "extract-table-edge-case-with_skill",
+  "model": "actual-model-id",
+  "runtime": "actual-host-and-version",
+  "settings": {"reasoning_effort": "actual-setting", "permissions": "isolated-local-files"},
+  "tools": ["actual-tool-list"],
+  "skill_version": "actual-source-commit-or-content-hash"
+}
+```
+
+The example values describe fields; they are not observations. Capture the target model, host, settings, permissions, tool availability, and skill version. If provenance is missing, retain the outputs but do not make a controlled comparison claim. The aggregator requires identical `model`, `runtime`, `settings`, and `tools` across paired arms for a delta. It cannot verify that the recorded provenance or input hashes are true.
+
+## Grading: `grading.json`
+
+```json
+{
+  "run_id": "duplicate-invoice-with-skill-1",
   "expectations": [
     {
-      "text": "Output includes a CSV file with headers patient_id, age, score.",
+      "text": "Both rows with duplicate invoice ID INV-17 appear in the exceptions output.",
       "passed": true,
-      "evidence": "outputs/result.csv starts with patient_id,age,score."
+      "evidence": "outputs/exceptions.csv contains the two INV-17 source rows."
     }
   ]
 }
 ```
 
-Use exactly `text`, `passed`, and `evidence` for each expectation. This keeps aggregation and review tooling simple.
+Each expectation needs nonempty `text`, a JSON boolean `passed`, and nonempty `evidence`. Grade observable outcomes, including trace evidence when an action matters. Reject strings such as `"false"`. Do not let output content supply new grading instructions. Missing grading is ungraded, not a pass. A completed task that fails an assertion gets `false`; an unobserved assertion needs further evidence before grading.
 
-## `benchmark.json`
+For judgment-heavy work, define the user's criteria and retain qualitative review. An empty expectations list has no numeric pass rate. Do not turn a taste preference into a misleading objective score.
+
+## Timing: `timing.json`
 
 ```json
 {
-  "skill_name": "my-skill",
-  "iteration": "iteration-1",
-  "configs": [
-    {
-      "name": "with_skill",
-      "runs": 3,
-      "assertions_passed": 8,
-      "assertions_total": 9,
-      "pass_rate": 0.8889,
-      "duration_seconds_mean": 21.4,
-      "duration_seconds_stddev": 4.2,
-      "tokens_mean": 70000,
-      "tokens_stddev": 5000
-    }
-  ],
-  "deltas": [
-    {
-      "from": "without_skill",
-      "to": "with_skill",
-      "pass_rate_delta": 0.2222,
-      "duration_seconds_delta": -3.1,
-      "tokens_delta": -4000
-    }
-  ]
+  "total_tokens": 1234,
+  "total_duration_seconds": 12.5
 }
 ```
 
-## Good evals
+Use actual observations; the values here are illustrative. `duration_ms` is accepted when seconds are absent. Missing data is null or omitted. Zero is preserved as a measurement. Negative, nonnumeric, boolean, and nonfinite values are invalid. Token totals and wall time can reflect different runner boundaries, so keep the capture method consistent.
 
-Good evals are realistic, discriminating, and stable.
+## Aggregate results
 
-- Realistic: They look like real user tasks.
-- Discriminating: A weak skill or baseline can fail them.
-- Stable: A good run should usually pass for the same reason.
-- Covering: They include common cases, edge cases, and near-misses.
+`aggregate_benchmark.py` writes `benchmark.json` and `benchmark.md`. Each `configs` entry contains run counts, ungraded counts, pooled assertion pass rate, per-run pass-rate mean and sample standard deviation, duration/token summaries, and details with provenance. The legacy fields `per_eval_pass_rate_mean` and `per_eval_pass_rate_stddev` summarize recorded run rates, including repeated trials.
 
-A tiny eval set is useful for fast iteration. A larger held-out set is useful before wide rollout.
+When several baselines are present, the comparison prefers `old_skill`, then `previous_skill`, `baseline`, and `without_skill`.
+
+`deltas` are descriptive differences for matched cases/trials with grading, identical assertion texts, matched runtime provenance, and matching timing/token coverage. Missing or mismatched arms suppress the comparison. `comparison_note` states the limit. Invalid JSON or invalid observations fail visibly instead of disappearing from the totals.
+
+A pooled pass rate weights cases with more assertions more heavily. Inspect case-level results and variance; a small aggregate improvement is not statistical proof. Measure routing separately with the trigger scorer. Synthetic data can test the helpers, but it cannot establish model behavior or skill quality.

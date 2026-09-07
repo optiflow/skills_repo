@@ -1,67 +1,41 @@
-# Workflow Modes Reference
+# Evaluation modes
 
-Use this when the ideal evaluation loop is not fully available.
+Choose a mode that the actual environment supports. Do not assume a particular CLI, browser, paid API, or subagent tool exists.
 
-## Full mode
+## Independent behavioral runs
 
-Use when you have independent agent runs, filesystem access, and can create review artifacts.
+Use independent agents or fresh host sessions for broad changes when permitted. Give each run the task, candidate skill, and minimum raw inputs. Keep the author's notes, expected solution, graders, and other run outputs out of the execution context. Use isolated writable folders and existing authorized tools; do not let fixtures affect production systems.
 
-1. Draft or edit the skill.
-2. Create eval prompts.
-3. Run with-skill and baseline runs independently.
-4. Grade objective assertions.
-5. Aggregate benchmark results.
-6. Generate a review page.
-7. Improve from scores and human feedback.
-8. Repeat until gains are clear or progress stalls.
+For a new skill, compare `with_skill` and `without_skill`. For updates, compare `with_skill` and the saved `old_skill`; a no-skill arm can also test whether the instructions still add value. Both arms need the same model, runtime, settings, tools, permissions, task, and input bytes. A baseline that can still discover the candidate is contaminated.
 
-## Single-agent mode
+Separate these questions:
 
-Use when there are no subagents.
+1. **Execution:** When explicitly given the skill, can the agent complete the task?
+2. **Discovery:** Does the host select the skill when it should, and leave adjacent tasks alone?
+3. **Value:** Does it improve the chosen outcome over a fair baseline at an acceptable time or token cost?
 
-1. Read the skill as the tested agent would.
-2. Run each test prompt inline.
-3. Save outputs under an iteration directory when a filesystem is available.
-4. Skip formal baseline claims unless you can run a fair baseline.
-5. Ask for human review or compare outputs manually.
-6. State that this is a sanity check, not a rigorous benchmark.
+A fresh subagent may still inherit host instructions or a global skills catalogue. Record that limitation. It is not enough to label two output folders differently.
 
-## No-browser or headless mode
+Use the existing evaluation schema. Keep the reference version fixed for regression tests; if you also compare with the previous iteration, label that separately. Repeat uncertain or variable cases. Record actual timing and token data only when available; capture model identity and settings from the runner rather than guessing.
 
-Generate static files instead of opening a server:
+For subjective outputs, use task-specific criteria and inspect the artifacts. An independent judge can compare anonymized A/B outputs; vary presentation order when the result matters. Treat judgment as evidence with limits, not an objective ground truth.
 
-```bash
-scripts/generate_review.py my-skill-workspace/iteration-1 --static review.html
-```
+## No independent runner
 
-Provide the HTML file as an artifact or path.
+Perform the supported structural checks and representative task walkthroughs. Save the resulting artifacts and label the walkthroughs as checks by the author. Do not fabricate baseline scores or call self-simulated trigger decisions observed host behavior. Deliver the work with the remaining test scope stated clearly.
 
-## No filesystem mode
+## No browser
 
-Keep the loop in the conversation:
+The review generator produces a static `review.html`. Link the file or show the relevant output in conversation. It does not collect or infer user approval.
 
-- Show the draft `SKILL.md`.
-- Show 2-5 test prompts.
-- Summarize expected outputs and likely assertions.
-- Ask for feedback on the draft and test set.
-- Do not claim scripts were tested or benchmarks were run.
+## No filesystem
 
-## Updating installed or read-only skills
+Return the proposed files as copyable content and explain which checks require a writable environment. Do not claim that helpers ran or an archive was created.
 
-If the source skill cannot be edited directly:
+## Installed or read-only source
 
-1. Copy it to a writable folder.
-2. Preserve the original folder name and frontmatter name unless the user asks for a rename.
-3. Snapshot the original before changing it.
-4. Use the snapshot as the baseline.
-5. Package from the writable copy.
+Copy the skill to a permitted writable folder, preserving its directory name and frontmatter name. Keep the original as a baseline. Edit and validate the copy. Deliver the copy or archive, and identify the source that would need updating. Do not silently overwrite a separate installed copy or publish the repository.
 
-## Lightweight mode
+## Stopping and handoff
 
-For small private skills, it is acceptable to skip full benchmarking when the user wants speed. Still do these minimum checks:
-
-- Valid frontmatter.
-- Clean folder structure.
-- No surprise files or secrets.
-- Important scripts run on representative inputs.
-- At least two realistic usage prompts are written down.
+Complete the requested checks and review any observed failures. Stop an optional tuning loop when the intended outcome is met, the agreed budget is reached, or further trials no longer change the decision. Do not use a fixed iteration count or missing optional tools to block a small authorized edit. Label unfinished evaluation work accurately.

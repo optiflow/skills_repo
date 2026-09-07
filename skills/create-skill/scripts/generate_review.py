@@ -40,7 +40,7 @@ def render_outputs(outputs: Path, run_root: Path) -> str:
 def render_grading(run_dir: Path) -> str:
     grading = read_json(run_dir / "grading.json")
     if not grading:
-        return ""
+        return "<p><em>Ungraded run; no pass rate is implied.</em></p>"
     rows = []
     for item in grading.get("expectations", []):
         status = "PASS" if item.get("passed") is True else "FAIL"
@@ -67,14 +67,15 @@ def render_benchmark(path: Optional[Path]) -> str:
         rows.append(
             "<tr>"
             f"<td>{html.escape(str(c.get('name')))}</td>"
-            f"<td>{c.get('runs')}</td>"
+            f"<td>{html.escape(str(c.get('runs')))}</td>"
             f"<td>{pass_rate}</td>"
-            f"<td>{c.get('assertions_passed')}/{c.get('assertions_total')}</td>"
-            f"<td>{c.get('duration_seconds_mean')}</td>"
-            f"<td>{c.get('tokens_mean')}</td>"
+            f"<td>{html.escape(str(c.get('assertions_passed')))}/{html.escape(str(c.get('assertions_total')))}</td>"
+            f"<td>{html.escape(str(c.get('duration_seconds_mean')))}</td>"
+            f"<td>{html.escape(str(c.get('tokens_mean')))}</td>"
             "</tr>"
         )
-    return "<table><tr><th>Config</th><th>Runs</th><th>Pass rate</th><th>Assertions</th><th>Duration mean</th><th>Tokens mean</th></tr>" + "".join(rows) + "</table>"
+    note = html.escape(str(data.get("comparison_note", "Inspect run provenance before comparing results.")))
+    return f"<p>{note}</p>" + "<table><tr><th>Config</th><th>Runs</th><th>Pass rate</th><th>Assertions</th><th>Duration mean</th><th>Tokens mean</th></tr>" + "".join(rows) + "</table>"
 
 
 def main() -> int:

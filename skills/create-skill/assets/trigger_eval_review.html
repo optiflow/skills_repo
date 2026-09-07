@@ -23,19 +23,29 @@ function render(){
   const root=document.getElementById('items'); root.innerHTML='';
   data.forEach((item,i)=>{
     const div=document.createElement('div'); div.className='item';
-    div.innerHTML=`<div><span class="badge">${item.id||('item-'+i)}</span></div>
-      <label>Query</label><textarea oninput="data[${i}].query=this.value; updatePreview()">${item.query||''}</textarea>
-      <label><input type="checkbox" ${item.should_trigger?'checked':''} onchange="data[${i}].should_trigger=this.checked; updatePreview()"> should trigger</label>
-      <button onclick="data.splice(${i},1); render(); updatePreview()">Remove</button>`;
+    const badge=document.createElement('span'); badge.className='badge';
+    badge.textContent=item.id||('item-'+i); div.appendChild(badge);
+    const queryLabel=document.createElement('label'); queryLabel.textContent='Query';
+    const area=document.createElement('textarea'); area.value=item.query||'';
+    area.setAttribute('aria-label', 'Query '+(i+1));
+    area.oninput=()=>{data[i].query=area.value; updatePreview();};
+    queryLabel.appendChild(area); div.appendChild(queryLabel);
+    const triggerLabel=document.createElement('label');
+    const check=document.createElement('input'); check.type='checkbox'; check.checked=item.should_trigger===true;
+    check.onchange=()=>{data[i].should_trigger=check.checked; updatePreview();};
+    triggerLabel.appendChild(check); triggerLabel.appendChild(document.createTextNode(' should trigger'));
+    div.appendChild(triggerLabel);
+    const remove=document.createElement('button'); remove.textContent='Remove';
+    remove.onclick=()=>{data.splice(i,1); render(); updatePreview();}; div.appendChild(remove);
     root.appendChild(div);
   });
   updatePreview();
 }
-function addItem(){data.push({id:'new-item',query:'',should_trigger:true}); render();}
+function addItem(){data.push({id:'new-'+crypto.randomUUID(),query:'',should_trigger:true}); render();}
 function updatePreview(){document.getElementById('preview').textContent=JSON.stringify(data,null,2);}
 function exportJson(){
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='eval_set.json'; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='eval_set.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 render();
 </script>

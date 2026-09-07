@@ -1,140 +1,64 @@
 #!/usr/bin/env python3
-"""Initialize a lean, testable AI-agent skill folder."""
+"""Initialize a skill draft without replacing an existing skill."""
 from __future__ import annotations
-
 import argparse
-import re
+import json
 from pathlib import Path
+from generate_openai_yaml import build_metadata, dump_yaml
+from quick_validate import valid_name
 
-NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}[a-z0-9]$|^[a-z0-9]$")
-ALLOWED_RESOURCES = {"scripts", "references", "assets"}
-
-
-def title_from_name(name: str) -> str:
-    return " ".join(part.capitalize() for part in name.split("-"))
-
-
-def yaml_quote(value: str) -> str:
-    value = value.replace("\\", "\\\\").replace('"', '\\"')
-    return f'"{value}"'
-
+ALLOWED_RESOURCES = {'scripts', 'references', 'assets'}
 
 def create_skill_md(name: str, description: str) -> str:
-    return f"""---
-name: {name}
-description: {description}
----
-
-# {title_from_name(name)}
-
-State the outcome this skill produces in one short paragraph.
-
-## Workflow
-
-1. Confirm the user's goal, inputs, output format, and constraints from the conversation.
-2. Use the bundled resources listed below only when they match the task.
-3. Produce the requested output and call out any limits or assumptions.
-
-## Bundled resources
-
-Replace this section with direct links to any files you add.
-
-- `scripts/`: Use for deterministic or repeated operations.
-- `references/`: Read for detailed domain rules, schemas, examples, or API notes.
-- `assets/`: Use for templates or files copied into outputs.
-
-## Quality checks
-
-- Validate inputs before transforming files or data.
-- Preserve user-provided constraints and formats.
-- Test important scripts with representative inputs.
-"""
-
-
-def create_evals_json(name: str) -> str:
-    return """{
-  "skill_name": "%s",
-  "evals": [
-    {
-      "id": "core-workflow",
-      "prompt": "Replace with a realistic user request that should use this skill.",
-      "expected_output": "Describe what a good result should contain.",
-      "files": [],
-      "assertions": [
-        {"text": "Replace with an objective assertion when possible."}
-      ]
-    },
-    {
-      "id": "edge-case",
-      "prompt": "Replace with a realistic edge case or messy user request.",
-      "expected_output": "Describe what a good result should contain.",
-      "files": [],
-      "assertions": []
-    }
-  ]
-}
-""" % name
-
-
-def create_openai_yaml(display_name: str, short_description: str, default_prompt: str) -> str:
-    return (
-        f"display_name: {yaml_quote(display_name)}\n"
-        f"short_description: {yaml_quote(short_description)}\n"
-        f"default_prompt: {yaml_quote(default_prompt)}\n"
-    )
-
+    frontmatter = dump_yaml({'name': name, 'description': description})
+    title = ' '.join(part.capitalize() for part in name.split('-'))
+    return f'---\n{frontmatter}---\n\n# {title}\n\n[TODO: Define the outcome, task-specific constraints, and the smallest useful workflow. Link only resources this skill needs.]\n'
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("name", help="Skill name, lower-case letters/digits/hyphens only")
-    parser.add_argument("--path", required=True, help="Parent directory where the skill folder will be created")
-    parser.add_argument("--description", help="Frontmatter description. Include what the skill does and when to use it.")
-    parser.add_argument("--resources", default="", help="Comma-separated resource dirs: scripts,references,assets")
-    parser.add_argument("--evals", action="store_true", help="Create evals/evals.json scaffold")
-    parser.add_argument("--openai-agent", action="store_true", help="Create agents/openai.yaml UI metadata")
-    parser.add_argument("--display-name", help="Display name for agents/openai.yaml")
-    parser.add_argument("--short-description", help="Short description for agents/openai.yaml")
-    parser.add_argument("--default-prompt", help="Default prompt for agents/openai.yaml")
-    parser.add_argument("--force", action="store_true", help="Allow writing into an existing empty directory")
+    parser.add_argument('name')
+    parser.add_argument('--path', required=True, help='Parent directory for the new skill')
+    parser.add_argument('--description', help='What the skill does and when it applies')
+    parser.add_argument('--resources', default='', help='Comma-separated scripts,references,assets; none by default')
+    parser.add_argument('--evals', action='store_true')
+    parser.add_argument('--openai-agent', action='store_true')
+    parser.add_argument('--display-name')
+    parser.add_argument('--short-description')
+    parser.add_argument('--default-prompt')
+    parser.add_argument('--force', action='store_true', help='Allow an existing empty directory; never overwrite files')
     args = parser.parse_args()
-
-    name = args.name.strip()
-    if not NAME_RE.fullmatch(name):
-        parser.error("name must use lowercase letters, digits, and hyphens; keep it under 64 characters")
-
-    parent = Path(args.path).expanduser().resolve()
-    skill_dir = parent / name
-    if skill_dir.exists() and any(skill_dir.iterdir()) and not args.force:
-        parser.error(f"target already exists and is not empty: {skill_dir}")
-    skill_dir.mkdir(parents=True, exist_ok=True)
-
-    description = args.description or (
-        f"Use this skill to perform the {name.replace('-', ' ')} workflow. "
-        "Replace this description with concrete trigger contexts, file types, user phrases, and expected tasks."
-    )
-    (skill_dir / "SKILL.md").write_text(create_skill_md(name, description), encoding="utf-8")
-
-    resources = {r.strip() for r in args.resources.split(",") if r.strip()}
-    unknown = resources - ALLOWED_RESOURCES
-    if unknown:
-        parser.error(f"unknown resource dirs: {', '.join(sorted(unknown))}")
+    name = args.name
+    if not valid_name(name):
+        parser.error('name must be 1-64 lowercase ASCII letters/digits with single internal hyphens')
+    resources = {r.strip() for r in args.resources.split(',') if r.strip()}
+    if resources - ALLOWED_RESOURCES:
+        parser.error('unknown resource dirs: ' + ', '.join(sorted(resources - ALLOWED_RESOURCES)))
+    description = args.description or '[TODO: Describe the capability and its main trigger.]'
+    if not description.strip() or len(description) > 1024:
+        parser.error('description must be 1-1024 characters')
+    interface_args = {key: getattr(args, key) for key in ('display_name', 'short_description', 'default_prompt') if getattr(args, key) is not None}
+    if interface_args and not args.openai_agent:
+        parser.error('UI fields require --openai-agent')
+    try:
+        metadata = build_metadata(name, description, interface_args) if args.openai_agent else None
+    except ValueError as exc:
+        parser.error(str(exc))
+    target = Path(args.path).expanduser().resolve() / name
+    if target.is_symlink() or (target.exists() and (not target.is_dir() or not args.force or any(target.iterdir()))):
+        parser.error('target exists; --force permits only an empty directory')
+    target.mkdir(parents=True, exist_ok=args.force)
+    (target / 'SKILL.md').write_text(create_skill_md(name, description), encoding='utf-8')
     for resource in sorted(resources):
-        (skill_dir / resource).mkdir(exist_ok=True)
-
+        (target / resource).mkdir()
     if args.evals:
-        (skill_dir / "evals").mkdir(exist_ok=True)
-        (skill_dir / "evals" / "evals.json").write_text(create_evals_json(name), encoding="utf-8")
-
-    if args.openai_agent:
-        display = args.display_name or title_from_name(name)
-        short = args.short_description or description.split(".")[0][:90]
-        default = args.default_prompt or f"Use the {title_from_name(name)} skill to complete this task."
-        (skill_dir / "agents").mkdir(exist_ok=True)
-        (skill_dir / "agents" / "openai.yaml").write_text(create_openai_yaml(display, short, default), encoding="utf-8")
-
-    print(skill_dir)
+        (target / 'evals').mkdir()
+        data = {'skill_name': name, 'evals': [{'id': 'core-workflow', 'prompt': '[TODO: Add a realistic request and input fixture.]', 'expected_output': '[TODO: Define observable success.]', 'files': [], 'assertions': []}]}
+        (target / 'evals' / 'evals.json').write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+    if metadata:
+        (target / 'agents').mkdir()
+        (target / 'agents' / 'openai.yaml').write_text(dump_yaml(metadata), encoding='utf-8')
+    print(f'Created draft: {target}\nReplace the TODO markers before validation or packaging.')
     return 0
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())

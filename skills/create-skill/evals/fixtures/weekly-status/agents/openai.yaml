@@ -1,0 +1,12 @@
+interface:
+  display_name: "Status Notes"
+  short_description: "Prepare clear weekly project status notes"
+  default_prompt: "Use $weekly-status to prepare this week's note."
+  icon_small: "./assets/status.svg"
+policy:
+  allow_implicit_invocation: false
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "project-tracker"
+      description: "Read supplied project updates"

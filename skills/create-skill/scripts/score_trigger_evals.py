@@ -11,9 +11,14 @@ from typing import Any, List
 def load_items(path: Path) -> List[dict[str, Any]]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(data, dict):
-        data = data.get("evals") or data.get("items") or data.get("queries")
+        data = next((data[key] for key in ("evals", "items", "queries") if key in data), None)
     if not isinstance(data, list):
         raise ValueError("input must be a list, or an object with evals/items/queries")
+    for i, item in enumerate(data):
+        if not isinstance(item, dict) or type(item.get("should_trigger")) is not bool:
+            raise ValueError(f"item {i} needs a JSON boolean should_trigger")
+        if item.get("triggered") is not None and type(item["triggered"]) is not bool:
+            raise ValueError(f"item {i} triggered must be a JSON boolean or null")
     return data
 
 
@@ -36,11 +41,11 @@ def main() -> int:
     tp = fp = tn = fn = missing = 0
     failures = []
     for item in items:
-        if "should_trigger" not in item or "triggered" not in item:
+        if item.get("triggered") is None:
             missing += 1
             continue
-        should = bool(item["should_trigger"])
-        got = bool(item["triggered"])
+        should = item["should_trigger"]
+        got = item["triggered"]
         if should and got:
             tp += 1
         elif should and not got:
@@ -54,7 +59,9 @@ def main() -> int:
 
     total = tp + fp + tn + fn
     score = {
+        "total_queries": len(items),
         "total_scored": total,
+        "coverage": safe_div(total, len(items)),
         "missing_triggered_or_should_trigger": missing,
         "true_positive": tp,
         "false_positive": fp,

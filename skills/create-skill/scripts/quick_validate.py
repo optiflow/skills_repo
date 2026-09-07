@@ -1,188 +1,201 @@
 #!/usr/bin/env python3
-"""Validate an AI-agent skill folder for structure, frontmatter, resources, evals, and common leaks."""
+"""Check portable metadata and resources; this is not a behavioral or security audit."""
 from __future__ import annotations
-
 import argparse
 import json
-import py_compile
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from urllib.parse import unquote, urlsplit
+try:
+    import yaml
+except ImportError:
+    raise SystemExit('PyYAML is required. Install scripts/requirements.txt in your chosen Python environment.')
 
-NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}[a-z0-9]$|^[a-z0-9]$")
-SECRET_PATTERNS = [
-    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
-    re.compile(r"sk-proj-[A-Za-z0-9_-]{20,}"),
-    re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{20,}"),
-]
-TEXT_EXTS = {".md", ".py", ".json", ".yaml", ".yml", ".txt", ".html", ".sh"}
-ALLOWED_ROOT = {"SKILL.md", "scripts", "references", "assets", "agents", "evals"}
-DISCOURAGED_ROOT_FILES = {"README.md", "CHANGELOG.md", "INSTALL.md", "INSTALLATION_GUIDE.md", "QUICK_REFERENCE.md"}
+NAME_RE = re.compile(r'[a-z0-9]+(?:-[a-z0-9]+)*\Z')
+TEXT_EXTS = {'.md', '.py', '.json', '.yaml', '.yml', '.txt', '.html', '.sh'}
+ALLOWED_ROOT = {'SKILL.md', 'scripts', 'references', 'assets', 'agents', 'evals', 'LICENSE', 'LICENSE.txt', 'LICENSE.md', 'NOTICE'}
+SECRET_PATTERNS = [re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{20,}"), re.compile(r'sk-(?:proj-)?[A-Za-z0-9_-]{20,}'), re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----')]
+PLACEHOLDERS = ('[TODO:', 'Replace this description with', 'State the outcome this skill produces in one short paragraph.', 'Replace this section with direct links')
 
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Reject duplicate keys instead of silently overwriting them."""
 
-def read_frontmatter(skill_md: Path) -> Tuple[Dict[str, str], str, List[str]]:
-    text = skill_md.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    errors: List[str] = []
-    if not lines or lines[0].strip() != "---":
-        return {}, text, ["SKILL.md must start with YAML frontmatter delimited by ---"]
-    try:
-        end = next(i for i in range(1, len(lines)) if lines[i].strip() == "---")
-    except StopIteration:
-        return {}, text, ["SKILL.md frontmatter is missing closing ---"]
-    data: Dict[str, str] = {}
-    for raw in lines[1:end]:
-        if not raw.strip() or raw.lstrip().startswith("#") or raw.startswith(" "):
-            continue
-        if ":" not in raw:
-            errors.append(f"frontmatter line is not key: value format: {raw}")
-            continue
-        key, value = raw.split(":", 1)
-        data[key.strip()] = value.strip().strip('"').strip("'")
-    body = "\n".join(lines[end + 1 :])
-    return data, body, errors
+def unique_mapping(loader, node, deep=False):
+    loader.flatten_mapping(node)
+    result = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str):
+            raise ValueError('YAML mapping keys must be strings')
+        if key in result:
+            raise ValueError(f'duplicate YAML key: {key}')
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
 
+UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
 
-def is_text_file(path: Path) -> bool:
-    return path.suffix.lower() in TEXT_EXTS
-
-
-def validate_evals(path: Path) -> List[str]:
-    errors: List[str] = []
-    evals_path = path / "evals" / "evals.json"
-    if not evals_path.exists():
-        return errors
-    try:
-        data = json.loads(evals_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        return [f"evals/evals.json is not valid JSON: {exc}"]
+def load_yaml_mapping(text: str) -> dict:
+    data = yaml.load(text, Loader=UniqueKeyLoader)
     if not isinstance(data, dict):
-        return ["evals/evals.json must be a JSON object"]
-    if not data.get("skill_name"):
-        errors.append("evals/evals.json missing skill_name")
-    evals = data.get("evals")
-    if not isinstance(evals, list):
-        errors.append("evals/evals.json field 'evals' must be a list")
-        return errors
-    for i, item in enumerate(evals):
+        raise ValueError('YAML must be a mapping')
+    return data
+
+def valid_name(name) -> bool:
+    return isinstance(name, str) and 1 <= len(name) <= 64 and bool(NAME_RE.fullmatch(name))
+
+def read_frontmatter(skill_md: Path) -> tuple[dict, str, list[str]]:
+    try:
+        text = skill_md.read_text(encoding='utf-8')
+    except (OSError, UnicodeError) as exc:
+        return {}, '', [f'cannot read SKILL.md: {exc}']
+    lines = text.splitlines()
+    if not lines or lines[0] != '---':
+        return {}, text, ['SKILL.md must start with YAML frontmatter delimited by ---']
+    end = next((i for i in range(1, len(lines)) if lines[i] == '---'), None)
+    if end is None:
+        return {}, text, ['SKILL.md frontmatter is missing closing ---']
+    body = '\n'.join(lines[end + 1:])
+    try:
+        return load_yaml_mapping('\n'.join(lines[1:end])), body, []
+    except (yaml.YAMLError, ValueError) as exc:
+        return {}, body, [f'invalid frontmatter: {exc}']
+
+def validate_evals(path: Path) -> list[str]:
+    file = path / 'evals' / 'evals.json'
+    if not file.exists():
+        return []
+    try:
+        data = json.loads(file.read_text(encoding='utf-8'))
+    except (OSError, UnicodeError, ValueError) as exc:
+        return [f'invalid evals/evals.json: {exc}']
+    if not isinstance(data, dict) or data.get('skill_name') != path.name or not isinstance(data.get('evals'), list):
+        return ['evals/evals.json needs a matching skill_name and an evals list']
+    errors, ids = [], set()
+    for i, item in enumerate(data['evals']):
         if not isinstance(item, dict):
-            errors.append(f"evals[{i}] must be an object")
+            errors.append(f'evals[{i}] must be an object')
             continue
-        if not item.get("id"):
-            errors.append(f"evals[{i}] missing id")
-        if not item.get("prompt"):
-            errors.append(f"evals[{i}] missing prompt")
-        if "assertions" in item and not isinstance(item["assertions"], list):
-            errors.append(f"evals[{i}].assertions must be a list")
+        ident = item.get('id')
+        if not isinstance(ident, str) or not ident.strip() or ident in ids:
+            errors.append(f'evals[{i}] needs a unique, nonempty string id')
+        else:
+            ids.add(ident)
+        prompt = item.get('prompt')
+        if not isinstance(prompt, str) or not prompt.strip() or prompt.startswith('Replace with') or '[TODO:' in prompt:
+            errors.append(f'evals[{i}] needs a real, nonempty prompt')
+        assertions = item.get('assertions', [])
+        if not isinstance(assertions, list) or any(not isinstance(a, dict) or not isinstance(a.get('text'), str) or not a['text'].strip() for a in assertions):
+            errors.append(f'evals[{i}].assertions must contain objects with nonempty text')
+        files = item.get('files', [])
+        if not isinstance(files, list) or any(not isinstance(f, str) for f in files):
+            errors.append(f'evals[{i}].files must be a list of paths')
     return errors
 
-
-def scan_secrets(path: Path) -> List[str]:
-    findings: List[str] = []
-    for file in path.rglob("*"):
-        if not file.is_file() or not is_text_file(file):
-            continue
-        try:
-            text = file.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
-            continue
-        for pattern in SECRET_PATTERNS:
-            if pattern.search(text):
-                findings.append(f"possible secret in {file.relative_to(path)}")
-                break
-    return findings
-
-
-def compile_python(path: Path) -> List[str]:
-    errors: List[str] = []
-    scripts = path / "scripts"
-    if not scripts.exists():
-        return errors
-    for script in scripts.rglob("*.py"):
-        try:
-            py_compile.compile(str(script), doraise=True)
-        except py_compile.PyCompileError as exc:
-            errors.append(f"Python syntax error in {script.relative_to(path)}: {exc.msg}")
+def validate_openai(path: Path, name: str) -> list[str]:
+    file = path / 'agents' / 'openai.yaml'
+    if not file.exists():
+        return []
+    try:
+        data = load_yaml_mapping(file.read_text(encoding='utf-8'))
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError) as exc:
+        return [f'invalid agents/openai.yaml: {exc}']
+    errors = []
+    if set(data) & {'display_name', 'short_description', 'default_prompt', 'icon', 'brand_color'}:
+        errors.append('OpenAI UI fields belong under interface; use icon_small/icon_large for icons')
+    interface = data.get('interface', {})
+    if not isinstance(interface, dict):
+        return errors + ['openai.yaml interface must be a mapping']
+    for key, value in interface.items():
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f'interface.{key} must be a nonempty string')
+    short = interface.get('short_description')
+    if isinstance(short, str) and not 25 <= len(short) <= 64:
+        errors.append('interface.short_description must be 25-64 characters')
+    prompt = interface.get('default_prompt')
+    if isinstance(prompt, str) and not re.search(r'\$' + re.escape(name) + r'(?![a-z0-9-])', prompt):
+        errors.append('interface.default_prompt must mention $' + name)
+    policy = data.get('policy', {})
+    if not isinstance(policy, dict) or ('allow_implicit_invocation' in policy and type(policy['allow_implicit_invocation']) is not bool):
+        errors.append('policy.allow_implicit_invocation must be a YAML boolean')
     return errors
 
+def validate_skill(path: Path) -> tuple[list[str], list[str]]:
+    path = Path(path).resolve()
+    if not path.is_dir() or not (path / 'SKILL.md').is_file():
+        return ['a skill directory containing SKILL.md is required'], []
+    links = [str(p.relative_to(path)) for p in path.rglob('*') if p.is_symlink()]
+    if links:
+        return ['nested symlinks are not validated; copy intended files: ' + ', '.join(links)], []
+    fm, body, errors = read_frontmatter(path / 'SKILL.md')
+    warnings = []
+    name, description = fm.get('name'), fm.get('description')
+    if not valid_name(name):
+        errors.append('name must be 1-64 lowercase ASCII letters/digits with single internal hyphens')
+    elif name != path.name:
+        errors.append('folder name must match frontmatter name')
+    if not isinstance(description, str) or not description.strip() or len(description) > 1024:
+        errors.append('description must be a nonempty string of at most 1024 characters')
+    if 'compatibility' in fm and (not isinstance(fm['compatibility'], str) or not 1 <= len(fm['compatibility'].strip()) <= 500):
+        errors.append('compatibility must be a nonempty string of at most 500 characters')
+    for field in ('license', 'allowed-tools'):
+        if field in fm and not isinstance(fm[field], str):
+            errors.append(f'{field} must be a string')
+    metadata = fm.get('metadata', {})
+    if not isinstance(metadata, dict) or any(not isinstance(v, str) for v in metadata.values()):
+        errors.append('metadata must map string keys to string values')
+    unknown = set(fm) - {'name', 'description', 'license', 'compatibility', 'metadata', 'allowed-tools'}
+    if unknown:
+        warnings.append('host-specific frontmatter needs target-host review: ' + ', '.join(sorted(unknown)))
+    if not body.strip():
+        errors.append('SKILL.md needs instructions after frontmatter')
+    if any(marker in body or (isinstance(description, str) and marker in description) for marker in PLACEHOLDERS):
+        errors.append('SKILL.md contains unfinished scaffold placeholders')
+    if len(body.splitlines()) > 500:
+        warnings.append('body exceeds the 500-line guidance; consider moving conditional detail')
+    for child in path.iterdir():
+        if child.name not in ALLOWED_ROOT and not child.name.startswith('.'):
+            warnings.append(f'review purpose of root item: {child.name}')
+    for file in path.rglob('*.md'):
+        contents = file.read_text(encoding='utf-8')
+        contents = re.sub(r'(?ms)^\s*(```|~~~).*?^\s*\1[^\n]*$', '', contents)
+        for target in re.findall(r'\]\(([^\s)]+)\)', contents):
+            parsed = urlsplit(target.strip('<>'))
+            if parsed.scheme or not parsed.path:
+                continue
+            dest = (file.parent / unquote(parsed.path)).resolve()
+            if not dest.is_relative_to(path) or not dest.exists():
+                errors.append(f'broken or external local link in {file.relative_to(path)}: {target}')
+    scripts = path / 'scripts'
+    for script in scripts.rglob('*.py') if scripts.exists() else []:
+        try:
+            compile(script.read_bytes(), str(script), 'exec')
+        except (SyntaxError, OSError) as exc:
+            errors.append(f'Python syntax/read error in {script.relative_to(path)}: {exc}')
+    for file in path.rglob('*'):
+        if file.is_file() and file.suffix.lower() in TEXT_EXTS:
+            text = file.read_text(encoding='utf-8', errors='replace')
+            if any(pattern.search(text) for pattern in SECRET_PATTERNS):
+                errors.append(f'possible secret in {file.relative_to(path)}')
+    errors.extend(validate_evals(path))
+    errors.extend(validate_openai(path, name if isinstance(name, str) else path.name))
+    return errors, warnings
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("skill_path", help="Path to a skill folder")
-    parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")
+    parser.add_argument('skill_path')
+    parser.add_argument('--strict', action='store_true', help='Treat review warnings as errors')
     args = parser.parse_args()
-
-    path = Path(args.skill_path).expanduser().resolve()
-    errors: List[str] = []
-    warnings: List[str] = []
-
-    if not path.exists() or not path.is_dir():
-        print(f"ERROR: not a directory: {path}")
-        return 1
-
-    skill_md = path / "SKILL.md"
-    if not skill_md.exists():
-        print("ERROR: SKILL.md is required")
-        return 1
-
-    frontmatter, body, fm_errors = read_frontmatter(skill_md)
-    errors.extend(fm_errors)
-
-    name = frontmatter.get("name", "")
-    description = frontmatter.get("description", "")
-    if not name:
-        errors.append("frontmatter missing name")
-    elif not NAME_RE.fullmatch(name):
-        errors.append("frontmatter name must use lowercase letters, digits, and hyphens and be under 64 characters")
-    elif path.name != name:
-        warnings.append(f"folder name '{path.name}' does not match frontmatter name '{name}'")
-
-    if not description:
-        errors.append("frontmatter missing description")
-    elif len(description.split()) < 8:
-        warnings.append("description is very short; include what the skill does and when to use it")
-
-    unknown_fm = set(frontmatter) - {"name", "description", "metadata", "compatibility"}
-    if unknown_fm:
-        warnings.append("unusual frontmatter fields: " + ", ".join(sorted(unknown_fm)))
-
-    if "when to use" in body.lower():
-        warnings.append("body contains 'when to use'; trigger rules usually belong in frontmatter description")
-
-    for child in path.iterdir():
-        if child.name in DISCOURAGED_ROOT_FILES:
-            warnings.append(f"discouraged root file: {child.name}")
-        elif child.name.startswith("."):
-            continue
-        elif child.name not in ALLOWED_ROOT:
-            warnings.append(f"unexpected root item: {child.name}")
-
-    refs = path / "references"
-    if refs.exists():
-        body_text = skill_md.read_text(encoding="utf-8")
-        for ref in refs.rglob("*"):
-            if ref.is_file() and not ref.name.startswith("."):
-                rel = str(ref.relative_to(path))
-                if ref.name not in body_text and rel not in body_text:
-                    warnings.append(f"reference file not linked from SKILL.md: {rel}")
-
-    errors.extend(validate_evals(path))
-    errors.extend(compile_python(path))
-    errors.extend(scan_secrets(path))
-
+    try:
+        errors, warnings = validate_skill(Path(args.skill_path).expanduser())
+    except (OSError, UnicodeError) as exc:
+        errors, warnings = [str(exc)], []
     for warning in warnings:
-        print(f"WARNING: {warning}")
+        print(f'WARNING: {warning}')
     for error in errors:
-        print(f"ERROR: {error}")
+        print(f'ERROR: {error}')
+    failed = bool(errors or (args.strict and warnings))
+    print(f"Validation {'failed' if failed else 'passed'}: {len(errors)} error(s), {len(warnings)} warning(s)")
+    return int(failed)
 
-    if errors or (args.strict and warnings):
-        print(f"Validation failed: {len(errors)} error(s), {len(warnings)} warning(s)")
-        return 1
-    print(f"Validation passed: {path}")
-    if warnings:
-        print(f"Warnings: {len(warnings)}")
-    return 0
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())
