@@ -21,6 +21,8 @@ Contents: test cases, layout, run provenance, grading, timing, aggregate results
 }
 ```
 
+Skill entrypoints used as fixtures are stored as `SKILL.md.fixture` so recursive host discovery does not install test skills. When preparing an isolated run, copy the fixture directory outside installed skill paths and rename `SKILL.md.fixture` to `SKILL.md` in that copy only. Keep other fixture files unchanged. The `files` list names stored input paths; the runner records any mapping to runtime paths.
+
 IDs are unique, nonempty strings. `files` are test inputs relative to the evals directory unless the runner records a different base. Copy the same bytes into each isolated run. Do not give expected outputs or grader notes to the agent executing the task. Do not include private data in shareable fixtures.
 
 ## Workspace layout

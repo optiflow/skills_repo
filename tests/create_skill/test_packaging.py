@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -71,6 +72,23 @@ class PackagingTests(unittest.TestCase):
             self.assertIsNone(archive.testzip())
             archive.extractall(self.root / 'unpacked')
         self.assertEqual(validate_skill(self.root / 'unpacked/small-skill'), ([], []))
+
+    def test_maintainer_evals_do_not_install_extra_skills(self):
+        source = SCRIPTS.parent
+        package_skill(source, self.archive, include_evals=True)
+        with zipfile.ZipFile(self.archive) as archive:
+            entrypoints = [name for name in archive.namelist() if Path(name).name == 'SKILL.md']
+            self.assertEqual(entrypoints, ['create-skill/SKILL.md'])
+            archive.extractall(self.root / 'maintainer')
+        unpacked = self.root / 'maintainer/create-skill'
+        self.assertEqual(validate_skill(unpacked), ([], []))
+        fixtures = list((unpacked / 'evals/fixtures').rglob('SKILL.md.fixture'))
+        self.assertTrue(fixtures, 'maintainer package must retain runnable fixture inputs')
+        for entrypoint in fixtures:
+            runtime = self.root / 'runtime' / entrypoint.parent.name
+            shutil.copytree(entrypoint.parent, runtime)
+            (runtime / 'SKILL.md.fixture').rename(runtime / 'SKILL.md')
+            self.assertEqual(validate_skill(runtime), ([], []))
 
 if __name__ == '__main__':
     unittest.main()

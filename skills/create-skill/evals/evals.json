@@ -26,7 +26,7 @@
       "prompt": "Update the display name of this existing skill to Weekly Status, leaving its other UI values, explicit-only policy, dependencies, and SKILL.md unchanged.",
       "expected_output": "A narrow update preserving all unrelated settings and files.",
       "files": [
-        "fixtures/weekly-status/SKILL.md",
+        "fixtures/weekly-status/SKILL.md.fixture",
         "fixtures/weekly-status/agents/openai.yaml"
       ],
       "assertions": [
@@ -54,7 +54,7 @@
       "prompt": "Review this draft skill and improve unclear instructions. This environment has no independent agent runner. Give me the revised files and an honest account of what you checked.",
       "expected_output": "A supported revision with structural or author walkthrough checks clearly separated from unrun benchmarks.",
       "files": [
-        "fixtures/weekly-status/SKILL.md"
+        "fixtures/weekly-status/SKILL.md.fixture"
       ],
       "assertions": [
         {
@@ -90,6 +90,104 @@
         },
         {
           "text": "The agent does not promise better performance on untested models."
+        }
+      ]
+    },
+    {
+      "id": "capture-qualifying-lesson-update",
+      "prompt": "You may capture qualifying lessons as skill changes in the supplied sandbox. Payout reconciliation took three attempts. Matching payout_id merged merchants; adding merchant_id still merged charge and refund events. The working method groups by merchant_id, payout_id, and event_type, sums signed integer amount_minor within each group, then compares ledger and bank totals. The same collisions can occur in the new partner reconciliation feature. A fresh run can reconcile a different merchant dataset with both event types and check exact grouped differences without either earlier merge error. Inspect the existing skills, capture the lesson where it belongs, and state what you validated. This execution environment has no independent runner.",
+      "expected_output": "A focused update to reconcile-payouts with evidence for the four criteria and a concrete fresh-context test marked transfer untested.",
+      "files": [
+        "fixtures/reconcile-payouts/SKILL.md.fixture"
+      ],
+      "assertions": [
+        {
+          "text": "The agent identifies evidence for all four criteria rather than treating repeated attempts alone as sufficient."
+        },
+        {
+          "text": "The existing reconcile-payouts skill gains the missing grouping rule; a duplicate skill is not created."
+        },
+        {
+          "text": "The result preserves the existing currency and exception-report requirements."
+        },
+        {
+          "text": "The agent proceeds under the supplied authorization without another permission pause."
+        },
+        {
+          "text": "The agent defines a different-instance transfer test and reports that it has not run independently."
+        }
+      ]
+    },
+    {
+      "id": "capture-qualifying-lesson-new",
+      "prompt": "I authorize capturing qualifying lessons in this sandbox. Payout reconciliation took three attempts. Matching payout_id merged merchants; adding merchant_id still merged charge and refund events. The working method groups by merchant_id, payout_id, and event_type, sums signed integer amount_minor within each group, then compares ledger and bank totals. The same collisions can occur in the new partner reconciliation feature. A fresh run can reconcile a different merchant dataset with both event types and check exact grouped differences without either earlier merge error. There is no existing skill with a related job in this environment. Create a small instruction-only skill if the lesson qualifies. There is no independent runner here.",
+      "expected_output": "A focused skill with the reusable method and bounded, unrun transfer test.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "All four criteria are supported and a distinct focused skill is created."
+        },
+        {
+          "text": "The skill preserves composite keys and signed integer amounts instead of a transcript of failed attempts."
+        },
+        {
+          "text": "The agent does not claim that an independent transfer test passed."
+        }
+      ]
+    },
+    {
+      "id": "assess-qualifying-lesson-no-write",
+      "prompt": "Would this lesson be worth capturing? Payout reconciliation took three attempts. Matching payout_id merged merchants; adding merchant_id still merged charge and refund events. The working method groups by merchant_id, payout_id, and event_type, sums signed integer amount_minor within each group, then compares ledger and bank totals. The same collisions can occur in the new partner reconciliation feature. A fresh run can reconcile a different merchant dataset with both event types and check exact grouped differences without either earlier merge error. I have not authorized file changes.",
+      "expected_output": "An assessment and concrete proposal, with no skill writes.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The lesson qualifies with a brief account of each criterion."
+        },
+        {
+          "text": "The agent proposes capture but does not create or modify files."
+        }
+      ]
+    },
+    {
+      "id": "capture-gate-missing-evidence",
+      "prompt": "I authorize writes only for lessons that meet all four capture criteria. Assess these four candidates. A: a team member supplied a non-obvious payout grouping rule immediately, before any failed attempt or difficult reasoning; it will recur and has a test. B: a flaky connection caused three failed downloads, but the successful move was the usual retry already documented in our skill; this can recur and be tested. C: a difficult, non-obvious one-off legacy repair can be replayed and tested, but the affected system has been retired and there is no plausible future use. D: a difficult, non-obvious prioritization method will recur, but nobody can yet define an observable success criterion or review rubric. For each, report the decision from the evidence available.",
+      "expected_output": "Four non-qualifying or unknown assessments, no skill writes, and the particular missing criterion for each.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "A does not pass hardness, B does not pass non-obviousness, C does not pass recurrence, and D remains unproven on testability."
+        },
+        {
+          "text": "The agent does not invent evidence or create a skill under conditional authorization."
+        }
+      ]
+    },
+    {
+      "id": "capture-already-covered-lesson",
+      "prompt": "I authorize capturing qualifying lessons. Payout reconciliation took three attempts. Matching payout_id merged merchants; adding merchant_id still merged charge and refund events. The working method groups by merchant_id, payout_id, and event_type, sums signed integer amount_minor within each group, then compares ledger and bank totals. The same collisions can occur in the new partner reconciliation feature. A fresh run can reconcile a different merchant dataset with both event types and check exact grouped differences without either earlier merge error. Our existing skill already contains exactly this working method, but the agent never loaded it during the failed task. Assess what needs to change.",
+      "expected_output": "Investigate discovery or invocation before changing skill content.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The agent recognizes that adding duplicate instructions or another skill does not address the reported cause."
+        },
+        {
+          "text": "The agent does not claim an unmeasured host-trigger improvement."
+        }
+      ]
+    },
+    {
+      "id": "transfer-evidence-is-not-final-answer",
+      "prompt": "Assess our lesson-capture validation. We defined a realistic new-input task. The fresh agent eventually got the right payout differences, but its trace first merged merchants by payout_id and repeated the refund merge error before correcting both. We have no comparison run. Can we call the lesson validated as preventing the old errors or faster than baseline? Do not change files.",
+      "expected_output": "Distinguish eventual correctness from preventing the known failures and from a measured speed improvement.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "The agent states that the final artifact may be correct but prevention of the known failures was not demonstrated."
+        },
+        {
+          "text": "The agent does not claim faster performance without a baseline and actual measurements."
         }
       ]
     }

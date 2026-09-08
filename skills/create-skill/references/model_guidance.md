@@ -15,7 +15,7 @@ Keep the reusable workflow stable and test the instructions whose effect may cha
 
 These are hypotheses to test, not mandatory additions to every skill. Keep API model settings, effort levels, context management, and installed-tool configuration in the host when that is where they are controlled. A portable skill should not hard-code a new model ID merely because it is newer.
 
-## Model-specific notes checked 2026-09-07
+## Model-specific notes checked 2026-09-08
 
 OpenAI's GPT-6 Astra guide flags sensitivity to skill instructions, extra clarification, and excessive testing on small changes. The current Claude Fable 5.1 guide also addresses incomplete follow-through, unsolicited expansion, and scope of tests. These support an audit of permission and process wording before adding more instructions.
 

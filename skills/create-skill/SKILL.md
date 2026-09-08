@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Create, review, improve, test, and package AI agent skills built around SKILL.md. Use when a user asks to turn a workflow into a reusable skill, revise an existing skill, diagnose its behavior or triggering, or compare skill versions. Ordinary task execution and skill installation alone do not need this workflow.
+description: Create, review, improve, test, and package AI agent skills built around SKILL.md. Use when a user asks to turn a workflow into a reusable skill, assess or capture a lesson from difficult work, revise an existing skill, diagnose its behavior or triggering, or compare skill versions. Ordinary task execution and skill installation alone do not need this workflow.
 compatibility: Instructions work across agents with skill support. Bundled helpers require Python 3.10+ and PyYAML; behavioral evaluations need a separate agent or host runner.
 ---
 
@@ -10,7 +10,7 @@ Produce a skill that adds useful knowledge or a reliable method to the target ag
 
 ## Working rules
 
-- Treat an explicit request to create or update a skill as authorization for that work. Use the context already supplied and resolve routine choices. If you only notice repeated work, propose the skill before creating it. Ask only for missing information that materially changes the result or for an action outside the user's authorization.
+- Treat an explicit request to create or update a skill as authorization for that work. Use the context already supplied and resolve routine choices. For a lesson noticed during other work, apply the capture gate below; propose it before writing unless the user has already authorized capturing qualifying lessons. Ask only for missing information that materially changes the result or for an action outside the user's authorization.
 - A skill supplies task guidance. It does not override system or developer instructions, the user's current request, tool permissions, or approval controls. Keep genuine workflow constraints; distinguish requirements from defaults and examples.
 - Describe the desired result, the evidence to use, and the constraints that matter. Give capable models room to choose the method. Use fixed steps where order or precision affects correctness. Remove generic tutorials, blanket approval pauses, repeated self-checks, and tool-use demands that do not help the task.
 - Keep scope and names stable during an update. Inspect existing resources and their callers before removing them. Preserve unrelated metadata, invocation policy, dependencies, and user edits.
@@ -37,6 +37,21 @@ Infer from the request and current files:
 For updates, save or identify the original version and inspect the reported failure before rewriting. For new skills, look for information the base model lacks: local schemas, business rules, approved templates, or repeatable operations. A preference or stable workflow can justify a skill even if the base model can already do the task.
 
 Before writing extensive instructions, define a small set of real tasks and what would count as success. Include a representative case and a plausible failure or boundary case; add cases for materially different modes. If making an improvement claim, establish the baseline early. Do not invent failures to justify more instructions.
+
+### Capture a lesson from completed work
+
+Use this gate when deciding whether a discovered lesson merits capture. It does not veto an explicit request for a skill, template, preference, or routine workflow just because the task was easy.
+
+| Criterion | Evidence needed |
+|---|---|
+| **It was hard** | Failed approaches or a specific constraint or trade-off that required substantial reasoning. Time spent or tool-call count alone is insufficient. |
+| **The move was not obvious** | A concrete method, constraint, or diagnostic step that another agent would otherwise need to rediscover. |
+| **It will recur** | A plausible second feature, repo, or task with the same underlying failure and stated conditions where the lesson applies. |
+| **It is testable** | A different instance of the problem, necessary inputs, and observable success criteria that check whether the known failure is avoided. |
+
+Require evidence for all four; mark missing evidence as unknown. If any criterion fails or remains unknown, do not promote the lesson as qualifying. An assessment request authorizes an assessment; a qualifying lesson still needs permission to write unless that permission already exists.
+
+Inspect relevant existing skills first. Update one when the lesson fits its job and trigger; create a new skill when it adds a distinct capability. Capture the general method and its limits, with the smallest useful change. See [lesson capture](references/lesson_capture.md) for evidence, overlap decisions, and fresh-context testing. A defined test makes a lesson testable; only an observed successful run validates it.
 
 ## 2. Write the smallest useful skill
 
@@ -85,6 +100,8 @@ Fix structural errors and review warnings; `--strict` also fails on warnings. Va
 Run each new or changed helper with representative input and a meaningful failure case. Check integrations and the complete workflow when a change crosses components. Inspect rendered results when appearance is part of success. Once applicable checks pass, repeat or broaden them only for a new change, failure, or unresolved concern.
 
 For behavioral tests, use realistic prompts and observable outcomes. Keep instructions and outputs separate from the evaluator's expected answers. New skills compare against no skill; updates compare against the saved original, with an optional no-skill check to see whether the skill is still needed. Use fresh runs with the same task, input files, model, settings, tools, and permissions. Explicit invocation tests task execution; it does not measure automatic discovery.
+
+For a captured lesson, use a fresh context with a different instance of the same problem, supplying only the candidate skill and necessary task inputs. Keep the earlier conversation, failed attempts, and expected answer out of that run. Check the result and whether the known failure recurs. If no independent run is available, deliver a draft labelled "transfer untested"; do not equate a structural pass or author walkthrough with successful transfer.
 
 Read [workflow modes](references/workflow_modes.md) for independent runs and limited environments, and [evaluation schemas](references/eval_schemas.md) when saving results. An author walking through their own draft is a useful smoke check, not an independent benchmark. Record missing observations as missing, and state which hosts and models were actually tested.
 

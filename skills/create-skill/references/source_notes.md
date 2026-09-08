@@ -28,3 +28,13 @@ The repository revisions above pin the snapshots inspected; a repository commit 
 - Keep field structure checks, code tests, artifact review, and runtime comparisons distinct. Passing one does not establish the others.
 
 These are review decisions, not claims that this revision has been benchmarked on every named model. Retain a model-specific rule only when the target environment and observed outcome justify it.
+
+## Lesson-capture update checked 2026-09-08
+
+The four criteria (hard, non-obvious, recurring, testable) are the user's policy for lessons discovered during work, not a requirement published by either provider. They do not restrict explicit requests for simple skills. Existing authorization permits capture; qualification alone does not authorize changing files.
+
+Rechecked both upstream creator files and their main revisions above; the revisions were unchanged. Rechecked Anthropic's authoring guidance and the three model guides linked above. The update follows OpenAI's concise, scoped instructions and proportional checks, and Anthropic's method of identifying a reusable pattern, defining evaluations, and testing on related tasks with a fresh agent. It preserves required validation while avoiding a compulsory verifier for every edit.
+
+The capture gate, choosing an existing skill before creating a duplicate, and the separate "testable" and "transfer validated" statuses are synthesis choices. The new reference routes this extra detail only to lesson-capture tasks. Runtime evidence must still be reported separately from this documentation review.
+
+A follow-up installation check found that the host exposed a nested payout fixture as a selectable skill. Fixture entrypoints now use `SKILL.md.fixture` and become `SKILL.md` only in isolated runs. A package-and-materialize regression check covers this distinction; structural validation alone had not caught it.

@@ -1,0 +1,10 @@
+---
+name: reconcile-payouts
+description: Reconcile ledger and bank payout exports and report grouped differences. Use when checking whether recorded payouts match bank settlement records.
+---
+
+# Reconcile Payouts
+
+Compare ledger and bank exports by payout ID using the supplied amount_minor values. Report the ledger total, bank total, and difference for each payout ID.
+
+Use signed integer amounts. Keep currencies separate and label missing currencies as unknown. Include unmatched groups in the exception report; do not discard them. Preserve original input files.
