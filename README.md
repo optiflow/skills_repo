@@ -60,7 +60,7 @@ Update existing skills with evidence, version severity, evals, validation, and r
 
 ### back-brief
 
-Validate task understanding and proposed plans for human-to-agent and agent-to-agent work. Make success criteria, assumptions, and open questions explicit, and use scoped review gates before execution.
+Validate task understanding and proposed plans for human-to-agent and agent-to-agent work. Make success criteria, assumptions, and open questions explicit, and use scoped review gates before execution. After execution, debrief results and assess possible reusable lessons through create-skill under its capture rules.
 
 ### spec-driven-dev
 

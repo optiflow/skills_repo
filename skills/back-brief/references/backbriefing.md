@@ -14,7 +14,7 @@ All links below were inspected on 8 September 2026. Publication dates are distin
 
 | Source and date | What it supports | Limit |
 |---|---|---|
-| U.S. Army Center for Army Lessons Learned, [Commander and Staff Guide to Rehearsals, No. 19-18](https://api.army.mil/e2/c/downloads/2023/01/19/48e6a637/19-18-commander-and-staff-guide-to-rehearsals-a-no-fail-approach-handbook-jul-19-public.pdf), July 2019, printed p. 5 and chapter 5 | A back brief reviews how subordinates intend to accomplish the mission, checks intent, and exposes problems in the approach. It follows planning; a confirmation brief follows receipt of instructions. | Military practice, not an AI experiment. This is a dated primary guide, not a claim about the latest doctrine edition. |
+| U.S. Army Center for Army Lessons Learned, [Commander and Staff Guide to Rehearsals, No. 19-18](https://api.army.mil/e2/c/downloads/2023/01/19/48e6a637/19-18-commander-and-staff-guide-to-rehearsals-a-no-fail-approach-handbook-jul-19-public.pdf), July 2019, printed p. 5 and chapter 5 | A back brief follows planning, reviews how subordinates intend to accomplish the mission, checks intent, and exposes problems in the approach. | Military practice, not an AI experiment. This is a dated primary guide, not a claim about the latest doctrine edition. |
 | AHRQ TeamSTEPPS, [Closed-Loop Communication](https://www.ahrq.gov/teamstepps-program/curriculum/communication/tools/loop.html), reviewed May 2023 | Sender initiates, receiver provides feedback, sender verifies. The sender has an active checking role. | Human teamwork guidance; no measured effect for LLM agents. |
 | AHRQ TeamSTEPPS, [Teach-Back](https://www.ahrq.gov/teamstepps-program/curriculum/communication/tools/teachback.html), reviewed May 2023 | Explaining instructions in one's own words exposes understanding more usefully than merely asserting understanding. | A related communication method; it does not define backbriefing. |
 | Amershi et al., [Guidelines for Human-AI Interaction](https://www.microsoft.com/en-us/research/wp-content/uploads/2019/01/Guidelines-for-Human-AI-Interaction-camera-ready.pdf), CHI 2019, guidelines 9, 10, and 12 | Make correction easy, handle uncertain user goals through clarification or reduced scope, and retain recent interaction context. | Design guidelines evaluated with practitioners and AI products; not a trial of modern agent back briefs. |
@@ -23,7 +23,7 @@ All links below were inspected on 8 September 2026. Publication dates are distin
 | LangChain, [LangGraph interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts), live documentation | A host can persist a pause and resume with external input. Resuming reruns the interrupted node; side-effect placement and retry behavior matter. | A runtime building block, not semantic plan review or reviewer authorization. No LangGraph integration was run for this revision. |
 | A2A Project, [Life of a Task](https://a2a-protocol.org/latest/topics/life-of-a-task/), live documentation | Task identity, context, input-required states, and completion states support tracked coordination. | The acceptance and plan-revision contract proposed here is application design, not a standard A2A feature. No A2A integration was run. |
 
-The earlier reference cited FM 6-0, ADP 6-0, FAA guidance, and secondary explanations without precise links. This revision uses the directly inspected Army guide for the definition and dated primary sources for each additional claim. It retains exact-item readback as a useful practice without claiming a particular FAA edition mandates an agent workflow.
+The definition uses the directly inspected Army guide. The dated primary sources above support each additional research claim.
 
 ## Why the mechanism can help
 
@@ -37,7 +37,6 @@ This is a design inference from the sources and the user's intended workflow. Th
 
 | Check | What it answers |
 |---|---|
-| Receipt | Did the receiver receive the task and critical details? |
 | Understanding | Does its own-word interpretation preserve the intended result and purpose? |
 | Plan validation | Would the proposed approach meet the success criteria within constraints? |
 | Authorization | May this actor perform these actions under the current instruction and permissions? |
@@ -77,6 +76,14 @@ Plan reviews should expose duplicated work, missing coverage, conflicting edits,
 
 See [agent coordination](agent-coordination.md) for a concrete message contract and runtime boundaries. The contract is deliberately separate from a specific framework.
 
+## Debrief and lesson handoff
+
+A debrief compares observed results with the original intent and success criteria. It can expose a reusable method, but completion, effort, or a surprising outcome alone does not justify a skill change. The handoff to `$create-skill` follows the user's capture policy; it is not a finding established by the research sources above.
+
+Example: an export passed its row-count check but duplicated records because different source systems reused the same local identifiers. Evidence shows that matching by source and local identifier fixed the error, another import has the same condition, and a separate fixture can test it. The debrief should explain the failed check, corrected method, recurrence conditions, and proposed test, then use the current `$create-skill` workflow to assess the lesson and inspect existing coverage.
+
+If the user requested only an assessment, return the assessment and any supported capture proposal without editing a skill. If qualifying captures were already authorized, follow that authority and the capture workflow without repeating the permission request. When evidence is missing or no reusable lesson emerges, keep the findings in the debrief. Report a defined but unrun transfer test as untested.
+
 ## Failure modes and remedies
 
 | Failure | What to change |
@@ -93,10 +100,11 @@ See [agent coordination](agent-coordination.md) for a concrete message contract 
 | Agents agree on a false premise | Check sources and outputs; consensus is not proof. |
 | A verbal gate is bypassed by tools or retries | Enforce state, authorization, and version checks in the host where required. |
 | Plan accepted, work unfinished | Check outputs and required tests before reporting completion. |
+| Every debrief creates another skill | Apply the current create-skill evidence, existing-coverage, permission, and validation rules. |
 
 ## Evaluation and limits
 
-The revision's cases are in [evals.json](../evals/evals.json). They cover explicit human review, authorized continuation, agent delegation and sender review, material ambiguity, corrections, stale acceptance, reserved authority, exact readback, trivial requests, and completion evidence.
+The revision's cases are in [evals.json](../evals/evals.json). They cover explicit human review, authorized continuation, agent delegation and sender review, material ambiguity, corrections, stale acceptance, reserved authority, critical constraints, trivial requests, completion evidence, and debrief handoffs to lesson assessment.
 
 Assess actual responses and tool traces, not the presence of headings alone. Useful measures for a later deployment trial include critical requirements retained, material contradictions caught before execution, unauthorized actions, avoidable pauses, correction turns, rework, review time, and task cost. Compare matched tasks with the saved original and measure any added review overhead.
 

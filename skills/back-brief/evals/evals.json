@@ -67,7 +67,7 @@
       "files": []
     },
     {
-      "id": "confirmation-vs-back-brief",
+      "id": "acknowledgment-only-near-miss",
       "prompt": "Before you plan anything, just confirm you understood this: migrate the billing export job to the new queue by Friday, but do not change invoice formatting.",
       "expected_output": "A short receipt and intent check that preserves the deadline and fixed formatting without planning or execution.",
       "assertions": [
@@ -84,7 +84,7 @@
       "files": []
     },
     {
-      "id": "incident-critical-readback",
+      "id": "incident-constraints",
       "prompt": "Incident bridge. Back brief the next steps now: isolate the affected workers, preserve logs, and do not rotate credentials until forensics confirms capture. Worker identifiers have not yet been supplied. No incident tools are available in this scenario.",
       "expected_output": "A concise containment brief preserving the ordering, with worker scope as a blocker and no invented authority or tool success.",
       "assertions": [
@@ -266,6 +266,128 @@
         },
         {
           "text": "Continues the remaining authorized work instead of reopening unchanged plan approval."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-routine-effort",
+      "prompt": "Debrief the completed download. The goal was to save the supplied file unchanged. Its checksum matched. It took two hours because the connection was slow; retrying worked. No other difficulty, reusable method, or second application is known. Decide whether there is a lesson worth assessing for skill capture.",
+      "expected_output": "Compare the successful result with intent and explain why elapsed time and a routine retry alone do not qualify a lesson; do not write a skill.",
+      "assertions": [
+        {
+          "text": "Uses checksum evidence to assess the intended result."
+        },
+        {
+          "text": "Does not equate elapsed time or retrying with a qualifying reusable lesson."
+        },
+        {
+          "text": "Does not create or update a skill."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-assessment-only",
+      "prompt": "Debrief this completed import and assess whether its lesson is worth capturing; do not edit skills. Matching customer rows by local ID merged distinct records from separate providers. Source logs show that matching by provider plus local ID fixed it. A different customer import uses the same ID pattern. A separate fixture includes colliding local IDs across providers and has expected distinct records and preserved amounts. The fixture has not been run. Relevant installed skills are available to inspect, but their contents are not supplied in this scenario.",
+      "expected_output": "Use create-skill to assess evidence and existing coverage, distinguish testability from validation, and keep skill edits pending.",
+      "assertions": [
+        {
+          "text": "Compares the failed matching approach and corrected result with the goal."
+        },
+        {
+          "text": "Routes the candidate lesson through the current create-skill workflow and checks relevant existing skills before choosing a destination."
+        },
+        {
+          "text": "Does not edit skills or treat assessment as write authorization."
+        },
+        {
+          "text": "Labels the different-instance test as proposed or unrun rather than validated."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-unknown-criterion",
+      "prompt": "Debrief a completed parser repair. You have prior permission to capture qualifying lessons. Two documented parsing approaches failed; preserving quoted delimiters fixed the issue, and a different CSV feed has the same pattern. No different-instance test inputs or observable acceptance criteria are available. Decide whether to capture now.",
+      "expected_output": "Assess through create-skill; testability is unknown, so conditional permission does not release a skill edit.",
+      "assertions": [
+        {
+          "text": "Uses the create-skill gate and identifies the missing test evidence as unknown."
+        },
+        {
+          "text": "Does not claim the lesson qualifies or write a skill under permission limited to qualifying lessons."
+        },
+        {
+          "text": "Keeps the findings in the debrief and names the missing evidence without inventing it."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-authorized-capture",
+      "prompt": "Debrief a completed CSV import repair and capture qualifying lessons under my existing authorization. Earlier naive splitting and escaping both failed on embedded delimiters. A standards-aware parser with explicit encoding fixed the import; another feed has the same delimiter and encoding conditions. A supplied different-instance fixture and expected records can test this. Inspection found an existing csv-import skill whose scope fits, but it lacks the encoding condition. No transfer test has run. Explain the next action; actual skill files and fixtures are not available in this scenario.",
+      "expected_output": "Use create-skill to update the existing gap under current authority and validate on the different instance, without inventing execution or asking again.",
+      "assertions": [
+        {
+          "text": "Routes through create-skill and selects a focused update to the existing skill."
+        },
+        {
+          "text": "Honors prior qualifying-capture authorization without another approval request."
+        },
+        {
+          "text": "Requires a fresh-context different-instance check and does not claim that editing or validation already occurred."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-existing-coverage",
+      "prompt": "Debrief this import failure and assess its lesson. Logs show that dropping timezone offsets caused collisions, and preserving offsets fixed them. Another feed has the same risk; a separate fixture and expected records define a test. Inspection confirmed the installed import-normalization skill already states the exact method, conditions, limits, and test. The worker had not loaded that skill. Assess only.",
+      "expected_output": "Use create-skill to recognize existing coverage and diagnose the missed invocation, without duplicating instructions.",
+      "assertions": [
+        {
+          "text": "Uses the create-skill overlap decision and recommends reusing the existing skill."
+        },
+        {
+          "text": "Identifies the missed skill use as distinct from a missing method."
+        },
+        {
+          "text": "Does not add a duplicate skill or claim an unrun test passed."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-explicit-simple-skill",
+      "prompt": "Debrief: the weekly status note used our standard four fields and went smoothly. I explicitly want you to turn that four-field format into a reusable skill. The fields are outcome, evidence, next step, and owner. No difficulty or failed approaches occurred. You may create and validate the local skill. In this scenario there is no file access; explain how you would proceed.",
+      "expected_output": "Follow create-skill as an explicit authorized skill request, without requiring the discovered-lesson difficulty gate or inventing file edits.",
+      "assertions": [
+        {
+          "text": "Recognizes the explicit skill request as authorization despite the routine task."
+        },
+        {
+          "text": "Uses create-skill to produce the smallest suitable workflow and check existing coverage."
+        },
+        {
+          "text": "Does not demand difficulty evidence or duplicate permission and does not claim edits ran."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": "debrief-capture-skill-unavailable",
+      "prompt": "Debrief the completed import. Provider-plus-local-ID matching fixed documented collisions; another feed has the same condition, and a different fixture defines observable success. A task note records the diagnostic evidence. The create-skill skill is not available in this environment. The request is for a debrief and possible lesson assessment only.",
+      "expected_output": "Keep evidence and candidate learning in the debrief, report that capture was not performed, and do not substitute an invented capture workflow.",
+      "assertions": [
+        {
+          "text": "Summarizes the outcome and candidate reusable method using supplied evidence."
+        },
+        {
+          "text": "States that create-skill is unavailable and skill capture was not performed."
+        },
+        {
+          "text": "Does not create a substitute skill or report completed transfer validation."
         }
       ],
       "files": []

@@ -1,4 +1,4 @@
 interface:
   display_name: "Back Brief"
-  short_description: "Check task understanding and validate the plan"
-  default_prompt: "Use $back-brief to state your understanding, success criteria, constraints, plan, assumptions, open questions, and whether a review gate is pending or execution is already authorized."
+  short_description: "Validate plans and review results for lessons"
+  default_prompt: "Use $back-brief to state your understanding, success criteria, constraints, plan, assumptions, open questions, and execution authority. For a debrief, compare results with intent and assess possible skill lessons through $create-skill under its current capture rules."

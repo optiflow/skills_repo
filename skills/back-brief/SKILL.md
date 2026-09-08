@@ -1,6 +1,6 @@
 ---
 name: back-brief
-description: Validate task understanding and a proposed plan before costly or consequential execution. Use when a human or coordinating agent asks for a back brief, intent check, plan review, or delegated-task alignment, and when material ambiguity, dependencies, or scope changes could cause rework. Covers human-to-agent and agent-to-agent exchanges. Skip routine clear one-step tasks unless requested; preserve existing authorization to proceed.
+description: Validate task understanding and a proposed plan before costly or consequential execution. Use when a human or coordinating agent asks for a back brief, intent check, plan review, or delegated-task alignment, and when material ambiguity, dependencies, or scope changes could cause rework. Also use for a post-task debrief to compare results with intent and assess possible lessons through create-skill. Covers human-to-agent and agent-to-agent exchanges. Skip routine clear one-step tasks unless requested; preserve existing authorization to proceed.
 ---
 
 # Back Brief
@@ -9,12 +9,10 @@ Make the receiver's understanding and intended approach visible early enough for
 
 A back brief is a reviewable proposal. When used as a plan-validation gate, the sender or an authorized reviewer checks it and accepts, revises, or holds it before dependent execution. Agreement about a plan does not prove its assumptions or the finished result.
 
-## Choose the right exchange
+## Before and after execution
 
-- **Confirmation brief:** immediately acknowledge the intent, task, and critical constraints when only a receipt check is requested.
 - **Back brief:** after enough inspection and planning to show a credible approach, before substantial execution.
-- **Readback:** preserve exact critical values, identifiers, dates, amounts, limits, and stop conditions within either brief.
-- **Debrief:** after action, compare results with intent and capture learning.
+- **Debrief:** after action, compare results with intent, explain deviations, and identify possible lessons for assessment.
 
 Use a back brief for explicit requests, consequential ambiguity, costly multi-step work, delegation with dependencies, or material changes to an accepted task. Scale detail to the decision. A clear routine request normally needs direct execution.
 
@@ -40,7 +38,7 @@ Open questions: Missing decisions that could change the result or plan; identify
 Gate: Waiting for [reviewer/decision], or proceeding under [existing instruction and scope].
 ```
 
-- Restate meaning rather than echoing the request. Preserve exact critical details through readback.
+- Restate meaning rather than echoing the request. Preserve stated values, identifiers, dates, amounts, limits, and stop conditions accurately.
 - Tie success to observable results and evidence. "Implement and test" is an activity; say which behavior, output, or acceptance check must pass.
 - Keep assumptions separate from requirements and questions. Do not invent deadlines, owners, budgets, facts, or permissions. Say "none material" when that is accurate.
 - Prefer a few decisive steps over a detailed task dump. Include interfaces and dependency order where another person or agent relies on the result.
@@ -94,5 +92,15 @@ A skill can guide the conversation; a reliable machine-enforced gate needs the h
 ## Execute and verify
 
 After release, execute the accepted or already-authorized scope. Check the output against the stated success criteria and report evidence, remaining gaps, and material changes. Run applicable unit and integration checks and end-to-end checks when the task crosses components. Plan acceptance is not a substitute for these checks.
+
+## Debrief and assess lessons
+
+Debrief when requested or when the outcome reveals a meaningful deviation or possible reusable lesson. Keep it proportionate. Compare the intended result and success criteria with observed results; explain what worked, what failed, and what remains uncertain. Support causes and lessons with evidence. A useful debrief may conclude that no skill change is warranted.
+
+When the user asks for lesson assessment or the debrief reveals a plausible reusable lesson, load the available `$create-skill` skill and follow its current lesson-capture workflow. Pass the relevant evidence: what made the work hard, the non-obvious method, where the same problem could recur, and how to test it on a different instance. Mark missing evidence as unknown; do not treat a candidate as qualifying until it satisfies that skill's full gate.
+
+Let `$create-skill` govern whether to reuse, update, or create a skill, the permission to write, and the required validation. A debrief or assessment request alone does not authorize skill edits. Preserve existing authorization to capture qualifying lessons; do not ask for it again. An explicit request to create or update a skill follows `$create-skill`'s direct-request path, even for a simple workflow.
+
+Report assessment, authorized capture, and observed validation as separate outcomes. A proposed test is not a completed test. If `$create-skill` is unavailable, keep the findings in the debrief and state that skill capture was not performed.
 
 Read [research and examples](references/backbriefing.md) for the source basis, human-to-agent examples, failure modes, and evaluation limits.
