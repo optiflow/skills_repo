@@ -1,3 +1,4 @@
-display_name: Back Brief
-short_description: Confirm the execution model before material action
-default_prompt: Back-brief this task before executing. Show the goal, success checks, constraints, plan, and open points so I can confirm, correct, or escalate.
+interface:
+  display_name: "Back Brief"
+  short_description: "Check task understanding and validate the plan"
+  default_prompt: "Use $back-brief to state your understanding, success criteria, constraints, plan, assumptions, open questions, and whether a review gate is pending or execution is already authorized."

@@ -12,7 +12,7 @@
     },
     {
       "title": "Task Alignment",
-      "description": "Skills that help agents confirm intent before material execution.",
+      "description": "Skills that help humans and agents validate task understanding and plans before execution.",
       "skills": [
         "back-brief"
       ]

@@ -60,7 +60,7 @@ Update existing skills with evidence, version severity, evals, validation, and r
 
 ### back-brief
 
-Confirm task intent before material execution. Use this when a task is ambiguous, risky, multi-step, file-changing, high-cost, or when the user asks the agent to restate the requirement before acting.
+Validate task understanding and proposed plans for human-to-agent and agent-to-agent work. Make success criteria, assumptions, and open questions explicit, and use scoped review gates before execution.
 
 ### spec-driven-dev
 
